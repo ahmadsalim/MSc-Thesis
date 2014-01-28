@@ -1,0 +1,94 @@
+\documentclass{ituthesis}
+\usepackage{hyperref} 
+
+\settitle{The Practical Guide to Levitation}
+\setauthor{Ahmad Salim Al-Sibahi}
+\setsupervisor{Dr. Peter Sestoft}
+\setextrasupervisor{David R. Christiansen}
+\setdate{September 1, 2014}
+
+\begin{document}
+%\selectlanguage{danish}
+
+\frontmatter
+
+\thetitlepage
+\newpage
+
+\chapter*{Abstract}
+Goal: Implementation of levitation in a realistic setting, with practical performance benefits.
+
+\cleardoublepage
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+\mainmatter
+
+%from memoir documentation:
+%TeX tries very hard to keep text lines justified while keeping the interword spacing as constant as possible, but sometimes fails and complains about an overfull hbox.
+%The default mode for LaTeX typesetting is \fussy where the (variation of) interword spacing in justified text is kept to a minimum. Following the \sloppy declaration there may be a much looser setting of justified text.
+%Additionally the class provides the \midsloppy declaration which allows a setting somewhere between \fussy and \sloppy.
+%fewer overfull lines than \fussy, and fewer obvious large interword spacing than with \sloppy.
+%the memoir manual also uses \midsloppy!
+\midsloppy
+% try harder to avoid widows and orphans
+\sloppybottom
+
+\chapter{Prologue}
+\label{cha:Prologue}
+\section{Introduction}
+\label{sec:Introduction}
+\section{Problem Definition}
+\label{sec:ProblemDefinition}
+\chapter{Generic Programming}
+\label{cha:GenericProgramming}
+\section{The Generic Structure of Inductive Data Types}
+\label{sec:TheGenericStructureofInductiveDataTypes}
+\textit{How Generic Programming generally works.}
+\section{The Importance of Genericity in Dependently-typed Languages}
+\label{sec:TheImportanceofGenericityinDependently-typedLanguages}
+\textit{The similarity of structure and various slightly-different indexing of types.}
+\section{The (Mostly) Gentle Art of Levitation}
+\label{sec:TheMostlyGentleArtofLevitation}
+\textit{The elegance of a complete theorem for both ordinary and generic programming. Highlighting of possible issues with performance.}
+\chapter{Partial Evaluation}
+\label{cha:PartialEvaluation}
+\section{Functions and Constant Inputs}
+\label{sec:FunctionsandConstantInputs}
+\textit{General introduction about partial evaluation.}
+\section{Binding-time Analyses of Programs}
+\label{sec:Binding-timeAnalysisofPrograms}
+\textit{Finding the relevant constant parts of the program.}
+\section{Specialisation as a Form of Optimization}
+\label{sec:SpecialisationasaFormofOptimization}
+\textit{Performance benefits of program specialisation. Pitfalls.}
+\chapter{Levitating Idris}
+\label{cha:LevitatingIdris}
+\section{A Pragmatic Implementation of Levitation}
+\label{sec:APragmaticImplementationofLevitation}
+\textit{How the general concept of levitation was transferred to Idris.}
+\section{Data Type Synthesis from Descriptions}
+\label{sec:DataTypeSynthesisfromGenericDescriptions}
+\textit{How levitated descriptions get transformed to ordinary data-types.}
+\section{Static Initialization of Generic Functions}
+\label{sec:StaticInitializationofGenericFunctions}
+\textit{How algorithms that are dependent on the generic structure of a data-type are optimized. Discuss benefits of having a JIT/Profiling information for future work.}
+\chapter{Practical Examples}
+\label{cha:PracticalExamples}
+\section{Generic Deriving}
+\label{sec:GenericDeriving}
+\textit{Examples of generic deriving of algorithms like decidable equality, pretty printing and possibly eliminators via generic structure.}
+\section{Uniplate for Idris}
+\label{sec:UniplateforIdris}
+\textit{A version of the Uniplate library for Idris based on} \url{http://community.haskell.org/~ndm/uniplate/} \textit{and} \url{http://www-ps.informatik.uni-kiel.de/~sebf/projects/traversal.html} \textit{.
+This is useful for traversing structures in a generic fashion and especially when dealing with small changes in large data structures (such as compiler ADTs)}
+\chapter{Epilogue}
+\label{cha:Epilogue}
+\section{Evaluation}
+\label{sec:Evaluation}
+\section{Future Work}
+\label{sec:FutureWork}
+\section{Conclusion}
+\label{sec:Conclusion}
+
+\end{document}
