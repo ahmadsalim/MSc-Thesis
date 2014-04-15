@@ -34,12 +34,61 @@ Goal: Implementation of levitation in a realistic setting, with practical perfor
 % try harder to avoid widows and orphans
 \sloppybottom
 
-\chapter{Prologue}
-\label{cha:Prologue}
-\section{Introduction}
-\label{sec:Introduction}
+\chapter{Introduction}
+\label{cha:Intoduction}
+\section{Context}
+\label{sec:Context}
+\begin{itemize}
+  \item Generic Programming
+  \item Descriped Types in Dependently-Typed Programming Languages
+  \item The Gentle Art of Levitation
+  \item Leveling-up dependent types
+\end{itemize}
 \section{Problem Definition}
 \label{sec:ProblemDefinition}
+\begin{itemize}
+  \item Lack of efficiency in type checking and run-time due to resulting large, data structures
+  \item Lack of use in a practical programming setting which has type-classes
+  \item Need for matching on the level of types (type-casing)
+\end{itemize}
+\section{Aim and Scope}
+\label{sec:AimandScope}
+\begin{itemize}
+  \item Aim
+    \begin{itemize}
+      \item To provide an efficient and practical implementation of described types/levitation in Idris that is in synergy with existing language features
+        such as type classes.
+    \end{itemize}
+  \item Scope
+    \begin{itemize}
+      \item To not extend underlying type theory, such as to increase support for further inductive-datatypes
+      \item To not focus on improving the existing representation significantly, and to choose the best fitting description there is
+      \item To not try and support all existing Idris language features, such as implicits, codata or automated proof search
+      \item To find an efficient run-time representation of the existing data-structures via partial compilation
+      \item To specialise generic functions over a description, to yield functions with good performance metrics (near hand-written)
+      \item To show realistic examples using generic functions such as some form for type-class deriving and traversal/querying
+    \end{itemize}
+\end{itemize}
+\section{Significance}
+\label{sec:Significance}
+\begin{itemize}
+  \item To show the applicability of generic programming using described types to real-world programs
+  \item To show that generic programming using described types can be a viable option to reduce boiler-plate without significant cost in performance
+  \item To highlight possible problems in the type-class deriving and generic traversal/querying examples which can be considered future work
+\end{itemize}
+\section{Overview}
+\label{sec:Overview}
+\begin{itemize} %Note: Change to non-passive/active I/We voice.
+  \item Chapter~\ref{cha:GenericProgramming} highlights the recent developments in generic programming, specifically focusing on described types in dependently-typed programming languages.
+  \item Chapter~\ref{cha:PartialEvaluation} investigates techniques for partial evaluation of functions and specialisation of data-type constructors.
+  \item Chapter~\ref{cha:LevitatingIdris} discusses further on how the general ideas of levitation, are implemented specifically in an Idris context. Furthermore it discusses, how some of the existing structures,
+    can be changed to have descriptions.
+  \item Chapter~\ref{cha:OptimizingIdrisforFlight} continues the discussion from Chapter~\ref{cha:LevitatingIdris}, this time concentrating on how optimizations are made
+    to ensure that described types do not carry a large run-time overhead.
+  \item Chapter~\ref{cha:PracticalExamples} shows two realistic examples for using levitation in Idris, namely type-class deriving and generic traversal/querying.
+  \item Chapter~\ref{cha:Evaluation} compares the performance of hand-written data types and functions, with the performance of generic programs on described types.
+  \item Chapter~\ref{cha:Discussion} discusses what challenges still lie ahead for practical usage of generic programming using described types, and concludes on the results of this work.
+\end{itemize}
 \chapter{Generic Programming}
 \label{cha:GenericProgramming}
 \section{The Generic Structure of Inductive Data Types}
@@ -67,9 +116,17 @@ Goal: Implementation of levitation in a realistic setting, with practical perfor
 \section{A Pragmatic Implementation of Levitation}
 \label{sec:APragmaticImplementationofLevitation}
 \textit{How the general concept of levitation was transferred to Idris.}
-\section{Data Type Synthesis from Descriptions}
-\label{sec:DataTypeSynthesisfromGenericDescriptions}
-\textit{How levitated descriptions get transformed to ordinary data-types.}
+\section{Description Synthesis from Ordinary Data Declarations}
+\label{sec:DescriptionSynthesisFromOrdinaryDataDeclarations}
+\textit{How ordinary data-declarations are synthesized to levitational descriptions.}
+\chapter{Optimizing Idris for Flight}
+\label{cha:OptimizingIdrisforFlight}
+\section{Specialising Constructors for Specific Types}
+\label{sec:SpecialisingConstructorsforSpecificTypes}
+\textit{How generalized constructors of described types, are specialised as ordinary data structures.}
+\section{Online Erasure of Unused Arguments}
+\textit{How some type infromation is to be erased at compile time to reduce elaboration overhead. Very hypothetical.}
+\label{sec:OnlineErasureofUnusedArguments}
 \section{Static Initialization of Generic Functions}
 \label{sec:StaticInitializationofGenericFunctions}
 \textit{How algorithms that are dependent on the generic structure of a data-type are optimized. Discuss benefits of having a JIT/Profiling information for future work.}
@@ -82,10 +139,10 @@ Goal: Implementation of levitation in a realistic setting, with practical perfor
 \label{sec:UniplateforIdris}
 \textit{A version of the Uniplate library for Idris based on} \url{http://community.haskell.org/~ndm/uniplate/} \textit{and} \url{http://www-ps.informatik.uni-kiel.de/~sebf/projects/traversal.html} \textit{.
 This is useful for traversing structures in a generic fashion and especially when dealing with small changes in large data structures (such as compiler ADTs)}
-\chapter{Epilogue}
-\label{cha:Epilogue}
-\section{Evaluation}
-\label{sec:Evaluation}
+\chapter{Evaluation}
+\label{cha:Evaluation}
+\chapter{Discussion}
+\label{cha:Discussion}
 \section{Future Work}
 \label{sec:FutureWork}
 \section{Conclusion}
