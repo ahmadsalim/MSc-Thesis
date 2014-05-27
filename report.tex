@@ -54,7 +54,7 @@ Finally, due to the way generic programs are applied abstractly to datatypes ins
 
 In dependently-typed languages such as Idris or Agda however, it seems that many of the issues can be mitigated.
 Particularly, due to the nature of dependently-typed languages and the Curry-Howard isomorphism, it is possible to encode proofs in datatypes, and as such design the datatype description such that all values of that type are correct by construction.
-More interestingly, as shown by Dagand et al. in `The Gentle Art of Levitation' it is possible to build a complete typesystem which is able to convert values of the descriptions to ordinary types and is even powerful enough to describe the datatype description itself.
+More interestingly, such as the one shown by Dagand et al. in `The Gentle Art of Levitation' it is possible to build a complete typesystem which is able to convert values of the descriptions to ordinary types and is even powerful enough to describe the datatype description itself.
 As such, in the Levitation-system generic programming can be achieved fully using ordinary programming techniques.
 
 \subsection{Anatomy of a Datatype}
@@ -118,36 +118,32 @@ Regarding parameters, they might not necessarily be required to be encoded in th
 Instead, they may merely be given as function arguments when writing the description of a particular datatype such as in the case of Figure~\ref{fig:descvec}.
 
 Finally for the index, only one type is required since we can represent arbitrary number of index arguments using a dependent pair by uncurrying. For example, for a type constructor with signature
-\texttt{(n : Nat) -> Fin n -> Type}, i.e. with indicies \texttt{Nat} and \texttt{Fin n}, it is possible to just uncurry the indicies such that they are \texttt{(n : Nat ** Fin n)} and so forth for more complicated indicies.
+\texttt{(n : Nat) -> Fin n -> Type}, i.e. with indices \texttt{Nat} and \texttt{Fin n}, it is possible to just uncurry the indicies such that they are \texttt{(n : Nat ** Fin n)} and so forth for more complicated indicies.
 
-%Write a summary about description for finishing up pedagogically
-
+Now that the interesting questions has been answered, let us in the end try and get an overview of Figure~\ref{fig:descvec}. As mentioned, the description starts with a boolean argument \texttt{isNil} that we use to check for which constructor
+we want to create, i.e. either \texttt{Nil} or \texttt{Cons}. If we are trying to construct a \texttt{Nil} which doesn't contain any data then we simply use \texttt{Ret} stating that the description is finished with the index of the resulting type being \texttt{Z}, analogously to Figure~\ref{fig:anatomydatatype}.
+In the case of \texttt{Cons} we first take a \texttt{Nat} argument to be used for the necessary indices, similarly to Figure~\ref{fig:anatomydatatype} but this time explicitly.\footnote{Implicit arguments is a feature of Idris that only works on top-level declarations}. Afterwards we take an argument of the input parameter type \texttt{a}, and a recursive argument---this time specified using \texttt{Rec} instead of \texttt{Arg}---that must satisfy to have \texttt{n} as index, i.e. the argument must be of type \texttt{Vect a n}.
+Finally we finish the description with \texttt{Ret} and specify that the resulting index must be \texttt{S n} as expected.
 
 \section{Problem Definition}
 \label{sec:ProblemDefinition}
-\begin{itemize}
-  \item Lack of efficiency in type checking and run-time due to resulting large, data structures
-  \item Lack of use in a practical programming setting which has type-classes
-  \item Need for matching on the level of types (type-casing)
-\end{itemize}
+
+The current work on generic programming in dependently-typed languages presents both elegant and correct ways to represent the structural descriptions of datatypes.
+Yet in many areas the work that has been done is mostly theoretically oriented, which can lead to some issues when used in a practical manner.
+First of all, many authors often use multiple incompatible descriptions depending on what property they would like to show; however this is not particularly attractive in a practical setting, since this could potentially confuse the generic programmer and make it harder for the compiler
+to handle transformations from generic programs to ordinary programs, and vica versa.
+Secondly, there has been little work on how to integrate such descriptions in more practical languages such as Idris which contains many modern language features such as Type Classes where some operations might be hand-written on some substructures and may not exist at the time of defining a particular generic function.
+Finally, datatypes synthesised from descriptions create large canonical terms and as such both type checking and runtime performance is very slow.
+
 \section{Aim and Scope}
 \label{sec:AimandScope}
-\begin{itemize}
-  \item Aim
-    \begin{itemize}
-      \item To provide an efficient and practical implementation of described types/levitation in Idris that is in synergy with existing language features
-        such as type classes.
-    \end{itemize}
-  \item Scope
-    \begin{itemize}
-      \item To not extend underlying type theory, such as to increase support for further inductive-datatypes
-      \item To not focus on improving the existing representation significantly, and to choose the best fitting description there is
-      \item To not try and support all existing Idris language features, such as implicits, codata or automated proof search
-      \item To find an efficient run-time representation of the existing data-structures via partial compilation
-      \item To specialise generic functions over a description, to yield functions with good performance metrics (near hand-written)
-      \item To show realistic examples using generic functions such as some form for type-class deriving and traversal/querying
-    \end{itemize}
-\end{itemize}
+The main aim of this research is to provide a practical and efficient implementation of described types in Idris.
+
+One key part is therefore to find a good definition of the description datatype that supports many of the commonly used datatypes in Idris.
+I seek to mainly base my effort on reusing some of the existing work on descriptions, and not try to extend support for other inductive families such as inductive-inductive and inductive-recursive datastypes; neither will I focus on supporting all of the vast language features of Idris such as implicit arguments or codata definitions.
+Another key part is to present realistic examples using generic functions by implementing a mechanism for type class deriving and a Scrap Your Boilerplate library for generic querying and traversal.
+In the end, I seek to use partial evaluation to optimise the generic functions with regards to specific descriptions to achieve near hand-written performance metrics.
+
 \section{Significance}
 \label{sec:Significance}
 \begin{itemize}
