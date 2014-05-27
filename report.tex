@@ -146,24 +146,21 @@ In the end, I seek to use partial evaluation to optimise the generic functions w
 
 \section{Significance}
 \label{sec:Significance}
+The main contributions of my research are:
+
 \begin{itemize}
-  \item To show the applicability of generic programming using described types to real-world programs
-  \item To show that generic programming using described types can be a viable option to reduce boiler-plate without significant cost in performance
-  \item To highlight possible problems in the type-class deriving and generic traversal/querying examples which can be considered future work
+  \item an example-based tutorial for understanding described types in the context of a practical programming language, namely Idris
+  \item an implementation of a mechanism for deriving type class instances in Idris, with examples for deriving decidable equality, pretty printing and functors.
+  \item a discussion of challenges that arise when trying to implement a SYB-style generics library in dependently typed languages
+  \item optimisation techniques based on partial evaluation for reducing runtime size and time overhead for described types and accompanying generic functions
+  \item metrics that show how generic programming using described types is a viable option to reduce boiler-plate without significant cost in performance
 \end{itemize}
 \section{Overview}
 \label{sec:Overview}
-\begin{itemize} %Note: Change to non-passive/active I/We voice.
-  \item Chapter~\ref{cha:GenericProgramming} highlights the recent developments in generic programming, specifically focusing on described types in dependently-typed programming languages.
-  \item Chapter~\ref{cha:PartialEvaluation} investigates techniques for partial evaluation of functions and specialisation of data-type constructors.
-  \item Chapter~\ref{cha:LevitatingIdris} discusses further on how the general ideas of levitation, are implemented specifically in an Idris context. Furthermore it discusses, how some of the existing structures,
-    can be changed to have descriptions.
-  \item Chapter~\ref{cha:OptimizingIdrisforFlight} continues the discussion from Chapter~\ref{cha:LevitatingIdris}, this time concentrating on how optimizations are made
-    to ensure that described types do not carry a large run-time overhead.
-  \item Chapter~\ref{cha:PracticalExamples} shows two realistic examples for using levitation in Idris, namely type-class deriving and generic traversal/querying.
-  \item Chapter~\ref{cha:Evaluation} compares the performance of hand-written data types and functions, with the performance of generic programs on described types.
-  \item Chapter~\ref{cha:Discussion} discusses what challenges still lie ahead for practical usage of generic programming using described types, and concludes on the results of this work.
-\end{itemize}
+I will present the report as follows. In Chapter~\ref{cha:GenericProgramming}, I will present an introduction to described types specifically focusing on recent developments using dependently-typed programming languages.
+In Chapter~\ref{cha:PartialEvaluation}, I will present an overview of techniques for partial evaluation of functions and specialisation of datatypes. In Chapter~\ref{cha:LevitatingIdris}, I will discuss specifically how described types are implemented in Idris and I will continue with the practical examples in Chapter~\ref{cha:PracticalExamples}.
+In Chapter~\ref{cha:OptimizingIdrisforFlight} I will present what optimisations were made in order to improve the runtime performance of described types and generic functions. I will evaluate the results in Chapter~\ref{cha:Evaluation}, comparing the performance of generic implementations to hand-written ones.
+Finally, I will discuss what challenges still lie ahead and conclude in Chapter~\ref{cha:Discussion}.
 \chapter{Generic Programming}
 \label{cha:GenericProgramming}
 \section{The Generic Structure of Inductive Data Types}
@@ -194,6 +191,15 @@ In the end, I seek to use partial evaluation to optimise the generic functions w
 \section{Description Synthesis from Ordinary Data Declarations}
 \label{sec:DescriptionSynthesisFromOrdinaryDataDeclarations}
 \textit{How ordinary data-declarations are synthesized to levitational descriptions.}
+\chapter{Practical Examples}
+\label{cha:PracticalExamples}
+\section{Generic Deriving}
+\label{sec:GenericDeriving}
+\textit{Examples of generic deriving of algorithms like decidable equality, pretty printing and possibly eliminators via generic structure.}
+\section{Uniplate for Idris}
+\label{sec:UniplateforIdris}
+\textit{A version of the Uniplate library for Idris based on} \url{http://community.haskell.org/~ndm/uniplate/} \textit{and} \url{http://www-ps.informatik.uni-kiel.de/~sebf/projects/traversal.html} \textit{.
+This is useful for traversing structures in a generic fashion and especially when dealing with small changes in large data structures (such as compiler ADTs)}
 \chapter{Optimizing Idris for Flight}
 \label{cha:OptimizingIdrisforFlight}
 \section{Specialising Constructors for Specific Types}
@@ -204,16 +210,7 @@ In the end, I seek to use partial evaluation to optimise the generic functions w
 \label{sec:OnlineErasureofUnusedArguments}
 \section{Static Initialization of Generic Functions}
 \label{sec:StaticInitializationofGenericFunctions}
-\textit{How algorithms that are dependent on the generic structure of a data-type are optimized. Discuss benefits of having a JIT/Profiling information for future work.}
-\chapter{Practical Examples}
-\label{cha:PracticalExamples}
-\section{Generic Deriving}
-\label{sec:GenericDeriving}
-\textit{Examples of generic deriving of algorithms like decidable equality, pretty printing and possibly eliminators via generic structure.}
-\section{Uniplate for Idris}
-\label{sec:UniplateforIdris}
-\textit{A version of the Uniplate library for Idris based on} \url{http://community.haskell.org/~ndm/uniplate/} \textit{and} \url{http://www-ps.informatik.uni-kiel.de/~sebf/projects/traversal.html} \textit{.
-This is useful for traversing structures in a generic fashion and especially when dealing with small changes in large data structures (such as compiler ADTs)}
+\textit{How algorithms that are dependent on the generic structure of a datatype are optimized. Discuss benefits of having a JIT/Profiling information for future work.}
 \chapter{Evaluation}
 \label{cha:Evaluation}
 \chapter{Discussion}
