@@ -8,6 +8,18 @@
 \usepackage[]{natbib}
 \bibliographystyle{agsm}
 
+\definecolor{constructor-color}{RGB}{155,187,89}
+\definecolor{type-color}{RGB}{142,180,227}
+\definecolor{declared-var-color}{RGB}{192,80,77}
+\definecolor{local-var-color}{RGB}{230,185,184}
+\definecolor{literal-color}{RGB}{179,162,199}
+
+\newcommand{\ttconstructor}[1]{\textcolor{constructor-color}{\texttt{#1}}}
+\newcommand{\tttype}[1]{\textcolor{type-color}{\texttt{#1}}}
+\newcommand{\ttdec}[1]{\textcolor{declared-var-color}{\texttt{#1}}}
+\newcommand{\ttvar}[1]{\textcolor{local-var-color}{\texttt{#1}}}
+\newcommand{\ttliteral}[1]{\textcolor{literal-color}{\texttt{#1}}}
+
 \settitle{The Practical Guide to Levitation}
 \setauthor{Ahmad Salim Al-Sibahi}
 \setsupervisor{Dr. Peter Sestoft}
@@ -48,139 +60,272 @@ when the work is complete.}
 \label{cha:Intoduction}
 \section{Context}
 \label{sec:Context}
-Algebraic datatypes such as booleans, lists or trees form a core part of modern functional programming.
+Algebraic datatypes such as Boolean values, lists or trees form a core part of modern functional programming.
 Most functions written work directly on such datatypes, but sometimes the function we write aren't directly dependent on the datatype itself and serve only as a repetitive exercise such as for structural equality or pretty printing.
 In fact it seems that it is possible to write an algorithm over the structural definition of the datatype, which the computer then could use to derive an actual function for particular datatypes.
 
 Enter the world of \textit{generic programming} where the target datatype is the one describing the structure of other datatypes, often called the \textit{description}.
-While generic programming sounds promising, there has traditionally been issues regarding usability in ordinary functional languages such as Haskell. To represent the description, it is often required to use special language extensions and the programming style tend to be
-orthogonal to writing ordinary programs.
+While generic programming sounds promising, it is usually seen as a challenging aspect of Haskell to use by ordinary programmers. To represent the description, it is often required to use special language extensions and the programming style tends to require different abstractions than when writing ordinary programs.
 
-However, in dependently-typed languages such as Idris or Agda it seems that it possible to mitigate such issues.
+%A tiny bit of history here?
+However, in dependently-typed languages such as Idris or Agda that it is possible to mitigate such issues.
 Due to the nature of dependently-typed languages it is possible to create a correct description using ordinary datatype definitions.
-Furthermore, \cite{Chapman:2010:GAL:1863543.1863547} how it is possible to build a self-supporting type system which is able to synthesise descriptions to ordinary types while still being powerful enough to describe the description datatype itself.
-Therefore in such system, generic programming is not different from ordinary programming in such system.
+Furthermore, \cite{Chapman:2010:GAL:1863543.1863547} show that it is possible to build a self-supporting type system which is able to convert these descriptions to ordinary datatypes (creating so-called \textit{described types}), while still being powerful enough to describe the description datatype itself.
+Therefore in such system, generic programming is just a special case of ordinary programming.
 
 %\subsection{The Importance of Genericity in Dependently-typed Languages}
 %\label{sub:TheImportanceofGenericityinDependently-typedLanguages}
 %\textit{The similarity of structure and various slightly-different indexing of types.}
 
 
-\section{Problem Definition}
+\section{Problem definition}
 \label{sec:ProblemDefinition}
-The current work on generic programming in dependently-typed languages presents both elegant and correct ways to represent the structural descriptions of datatypes. Furthermore, it allows the programmer to save both time and boilerplate code by using ordinary techniques to do generic programming.
+The current work on generic programming in dependently-typed languages presents both elegant and typesafe ways to represent the structural descriptions of datatypes. Furthermore, it allows the programmer to save both time and boilerplate code by using ordinary programming techniques to do generic programming.
 
-Yet in many ways, the state of the art is heavily theoretically oriented, which might lead to issues when a system needs to be developed with a practical audience in mind.
-First of all, multiple incompatible descriptions are often presented in the current field, sometimes even in the same paper, which is not particularly attractive in a practical setting.
+However, the state of the art is heavily theoretically oriented, which might lead to issues when a system needs to be developed with a practical audience in mind.
+First of all, multiple description formats are often presented, sometimes even in the same paper, which might not be particularly attractive in a practical setting.
 Secondly, there has been little work done on how to integrate such descriptions in languages which contain features such as type classes and proof scripts.
-Finally, datatypes synthesised from descriptions create large canonical terms and as such both type checking and runtime performance is very slow.
-In summary, if an efficient and easily usable framework for programming with described types that avoids the described issues could be implemented successfully, it would save programmers both the time and effort required when writing repetitive functions.
+Finally, datatypes synthesised from descriptions create large canonical terms thus, both type checking and runtime performance are very slow.
+In summary, if an efficient and easily usable framework for programming with described types that avoids the described issues could be implemented successfully, it would save programmers both the time and effort required to write repetitive functions.
 
-\section{Aim and Scope}
+\section{Aim and scope}
 \label{sec:AimandScope}
-The main aim of this research is to provide a practical and efficient implementation of described types in Idris.
+The aim of this research is to provide a practical and efficient implementation of described types in Idris.
+This project has three primary subgoals.
 
-One key part is to find a good definition of the description that supports many common datatypes.
-I seek to mainly base my effort on reusing some of the existing work, and not try to improve underlying type theory to support more complex inductive families; neither will I focus on supporting all language features of Idris such as implicit arguments and codata definitions.
-Another key part is to present realistic examples using generic functions by implementing functions that can be used to derive type class instances and a Scrap Your Boilerplate library for generic querying and traversal.
-In the end, I seek to use partial evaluation to optimise the generic functions with regards to specific descriptions to try to achieve near hand-written performance metrics. %Elaborate when I know more about PE\ldots
+The first subgoal is to find a good definition of the description that supports many common datatypes.
+I seek to mainly reuse some of the existing work, and not try to improve underlying type theory to support more complex inductive families; neither will I focus on supporting all language features of Idris such as implicit arguments and codata definitions.
+
+The second subgoal is to present realistic examples using generic functions working on described types. 
+This mainly includes implementing functions that can be used to derive type class instances, and a Scrap Your Boilerplate (SYB) library for generic querying and traversal.
+
+The final subgoal is that I seek to use partial evaluation to optimise the generic functions with regards to specific descriptions in order to achieve acceptable performance.
+This includes using techniques such as polyvariant partial evaluation and constructor specialisation. %Elaborate when I know more about PE\ldots
 
 \section{Significance}
 \label{sec:Significance}
-The main contributions of my research are:
+The main contributions of this thesis are:
 
 \begin{itemize}
   \item an example-based tutorial for understanding described types in the context of a practical programming language, namely Idris
   \item an generic implementation of common operations such as decidable equality, pretty printing and functors, which can be used to provide default implementations to type class methods.
-  \item a discussion of what challenges arise when trying to implement a SYB-style generics library in dependently typed languages
+  \item a discussion of the challenges that arise when trying to implement a SYB-style generics library in dependently typed languages
   \item optimisation techniques based on partial evaluation for reducing runtime size and time overhead for described types and accompanying generic functions
-  \item metrics that show how generic programming using described types is a viable option to reduce boilerplate without significant cost in performance
+  \item metrics showing that generic programming using described types is a viable option to reduce boilerplate without significant cost in performance
 \end{itemize}
 \section{Overview}
 \label{sec:Overview}
-I will present the report as follows. In Chapter~\ref{cha:GenericProgramming}, I will present an introduction to described types specifically focusing on recent developments using dependently-typed programming languages.
-In Chapter~\ref{cha:PartialEvaluation}, I will present an overview of techniques for partial evaluation of functions and specialisation of datatypes. In Chapter~\ref{cha:LevitatingIdris}, I will discuss specifically how described types are implemented in Idris and I will continue with the practical examples in Chapter~\ref{cha:PracticalExamples}.
-In Chapter~\ref{cha:OptimizingIdrisforFlight} I will present what optimisations were made in order to improve the runtime performance of described types and generic functions. I will evaluate the results in Chapter~\ref{cha:Evaluation}, comparing the performance of generic implementations to hand-written ones.
-Finally, I will discuss what challenges still lie ahead and conclude in Chapter~\ref{cha:Discussion}.
-\chapter{Generic Programming}
+
+The report is structured as follows. Chapter~\ref{cha:GenericProgramming}, presents an introduction to described types specifically focusing on recent developments using dependently-typed programming languages.
+Chapter~\ref{cha:PartialEvaluation}, presents an overview of techniques for partial evaluation of functions and specialisation of datatypes. Chapter~\ref{cha:LevitatingIdris}, discusses specifically how described types are implemented in Idris and continues with practical examples in Chapter~\ref{cha:PracticalExamples}.
+Chapter~\ref{cha:OptimizingIdrisforFlight} presents what optimisations were made in order to improve the runtime performance of described types and generic functions. Evaluation of the results happens in Chapter~\ref{cha:Evaluation}, comparing the performance of generic implementations to hand-written ones.
+Finally, Chapter~\ref{cha:Discussion} discusses what challenges still lie ahead and concludes the effort.
+\chapter{Generic programming}
 \label{cha:GenericProgramming}
-\section{The Generic Structure of Inductive Data Types}
+\section{The generic structure of inductive data types}
 \label{sec:TheGenericStructureofInductiveDataTypes}
-\subsection{Anatomy of a Datatype}
+\subsection{Anatomy of a datatype}
 \label{sub:AnatomyofaDatatype}
-In order to understand how a description might look like, let us first start by looking closely at how datatypes are structured. In Figure~\ref{fig:anatomydatatype}, I will present an annotated version of a typical dependently-typed datatype representing vectors.
+To build an intuition that will be useful in understanding descriptions, let us first start by looking closely at how datatypes are structured.
+Figure~\ref{fig:anatomydatatype}, presents an annotated version of a typical dependently-typed datatype representing vectors.
 
 \begin{figure}[ht]
 \begin{center}
     \includegraphics[scale=0.5]{Figures/AnatomyOfADatatype.png}
 \end{center}
-\caption{Annotated Components of a Datatype Declaration}
+\caption{Annotated components of a datatype Declaration}
 \label{fig:anatomydatatype}
 \end{figure}
 
 A datatype consists of a type constructor which describes what type-level arguments are required, and zero or more data constructors which describe how to create values of the datatype.
-The type constructor consists of three components: a name for the datatype, types of any possible parameters, and the types of possible indices.
-In Figure~\ref{fig:anatomydatatype} there is no difference between a parameter type or an index type since Idris figures that out automatically.\footnote{If the argument to a type constructor doesn't change in the data constructor declarations Idris considers that a parameter, and otherwise an index.}
+The type constructor has three components: a name for the datatype, types of any possible parameters, and the types of possible indices.
+In Figure~\ref{fig:anatomydatatype} there is no syntactic difference between a parameter type or an index type since Idris figures that out automatically.\footnote{If an argument to a type constructor doesn't change in the data constructor declarations, Idris considers it a parameter, otherwise an index.}
 
-Similarly to the type constructor, data constructors need names too, also called \textit{tags}.
+Similarly to the type constructor, a data constructor needs a name, also called a \textit{tag}.
 Following the tag, the data constructor declaration contains the types of the arguments stored in the constructor and the resulting type which must use the type constructor of the datatype.
-In our example two constructors are declared, \texttt{Nil} and \texttt{Cons}.
-\texttt{Nil} doesn't hold any data, so it only needs to define the resulting type which is \texttt{Vect a Z} (a vector with length 0).
-\texttt{Cons} contains three different types of arguments: an ordinary implicit argument, an ordinary explicit argument, and an explicit argument to the type itself (recursive); the resulting type for \texttt{Cons} is \texttt{Vect a (S n)} (i.e. a vector of length 1+n where n is the length of the recursive argument).
+In our example two constructors are declared, \ttconstructor{Nil} and \ttconstructor{Cons}.
+Constructor \ttconstructor{Nil} doesn't hold any data, so it only needs to define the resulting type which is \tttype{Vec}~\ttvar{a}~\ttconstructor{Z} (a vector with length 0).
+Constructor \ttconstructor{Cons} contains three different types of arguments: an ordinary implicit argument, an ordinary explicit argument, and an explicit argument of the type itself (recursive); the resulting type for \ttconstructor{Cons} is \tttype{Vec}~\ttvar{a}~\texttt{(}\ttconstructor{S}~\ttvar{n}\texttt{)}, that is, a vector of length 1+n where n is the length of the recursive argument.
 
-\subsection{A Description for Datatypes}
+\subsection{A description for datatypes}
 \label{sub:ADescriptionforDatatypes}
 It is now possible to try to represent a suitable description datatype. Figure~\ref{fig:descriptiondatatype} presents one possible solution, influenced mainly by the work of \cite{mcbride2010ornamental} and \cite{diehl2014eliminators}.
 
 \begin{figure}[ht]
 \begin{center}
+    \includegraphics[scale=0.5]{Figures/ADescriptionforDatatypesSimple.png}
+\end{center}
+\caption{A datatype that describes other datatypes}
+\label{fig:simpldescdatatype}
+\end{figure}
+
+The description datatype has three main constructors:
+\begin{itemize}
+  \item  Constructor \ttconstructor{Ret} represents the end of a description
+  \item  Constructor \ttconstructor{Arg} represents the addition of an argument of any type to a given description; the first argument of \ttconstructor{Arg} is the type of argument expected and the second argument is the rest of the description dependent on a value of that type.
+  \item  Constructor \ttconstructor{Rec} represents an recursive argument of the described datatype. The argument of constructor \ttconstructor{Rec} is the specification of the rest of the description.
+\end{itemize}
+
+In order to get an idea on how descriptions for various interesting datatypes look like, the following paragraphs will show a series of examples translating ordinary declarations to descriptions.
+The declaration of the trivial singleton type \tttype{Unit} is shown in Figure~\ref{fig:declunit}, and its corresponding description is shown in Figure~\ref{fig:descunit}. Since \tttype{Unit} doesn't hold
+any interesting arguments, \ttconstructor{Ret} is used to simply end the description.
+
+\begin{figure}[ht]
+\begin{center}
+  \subcaptionbox{Declaration of \tttype{Unit}\label{fig:declunit}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/UnitDeclaration.png}
+}
+\subcaptionbox{Description of \tttype{Unit}\label{fig:descunit}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/UnitDescription.png}
+
+}
+\caption{The \tttype{Unit} datatype and its description}
+\end{center}
+\end{figure}
+
+A more interesting datatype is shown in Figure~\ref{fig:declpair}, namely the datatype \tttype{Pair} representing a pair of \tttype{Int} and \tttype{Bool}.
+The translation to the corresponding description, as shown in Figure~\ref{fig:descpair}, seems straightforward. For each argument of \ttconstructor{MkPair}, we use
+\ttconstructor{Arg} to specify its corresponding type and bind its value in a lambda expression so that it can be used by the rest of the description. In fact, for most arguments with the form \texttt{(}\ttvar{arg}~\texttt{:}~\ttvar{a}\texttt{)~->}~\ttvar{b} the corresponding description
+would be of the form \ttconstructor{Arg}~\ttvar{a}~\texttt{(\textbackslash}\ttvar{arg}~\texttt{=>}~\ttvar{b}\texttt{)}
+Finally, to specify the end of the description, \ttconstructor{Ret} is used.
+
+\begin{figure}[ht]
+\begin{center}
+  \subcaptionbox{Declaration of \tttype{Pair}\label{fig:declpair}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/PairDeclaration.png}
+}
+\subcaptionbox{Description of \tttype{Pair}\label{fig:descpair}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/PairDescription.png}
+
+}
+\caption{A pair of \tttype{Int} and \tttype{Bool}}
+\end{center}
+\end{figure}
+
+A key aspect of algebraic datatypes is the ability to choose between multiple constructors.
+Figure~\ref{fig:decleither} shows a simple datatype \tttype{Either} which provides two constructors \ttconstructor{Right} and \ttconstructor{Left}, than can hold a value of \tttype{Int} and \tttype{String} respectively.
+
+Since there are no explicit way to encode a choice between multiple constructor, a boolean argument \ttvar{isRight} is used to determine which constructor is specified.
+If the value of \ttvar{isRight} is true then the resulting description is expected to be for the \ttconstructor{Right} constructor, otherwise
+is is expected to be for the \ttconstructor{Left} constructor. The description for each constructor is then specified in a similar fashion to datatypes with one constructor such
+as \tttype{Pair} described above.
+
+\begin{figure}[ht]
+\begin{center}
+  \subcaptionbox{Declaration of \tttype{Either}\label{fig:decleither}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/EitherDeclaration.png}
+}
+\subcaptionbox{Description of \tttype{Either}\label{fig:desceither}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/EitherDescription.png}
+
+}
+\caption{the sum type of \tttype{Int} and \tttype{String}}
+\end{center}
+\end{figure}
+
+In addition to allowing the choice between multiple possible constructors, what makes algebraic datatypes interesting is the ability to
+have recursive (or \textit{inductive}) instances. The simplest recursive datatype is the natural numbers \tttype{Nat} (shown in Figure~\ref{fig:declnat}) which has two constructors,
+\ttconstructor{Zero} which represents \ttliteral{0} and the recursively defined \ttconstructor{Succ} which represents \ttliteral{1}+\ttvar{n} for any natural number \ttvar{n}.
+The corresponding description is shown in Figure~\ref{fig:declnat} which is mainly built up using the principles introduced before.
+The only addition is that the description for \ttconstructor{Succ} now uses \ttconstructor{Rec} to specify that it requires a recursive argument (to type \tttype{Nat} itself).
+
+\begin{figure}[ht]
+\begin{center}
+  \subcaptionbox{Declaration of \tttype{Nat}\label{fig:declnat}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/NatDeclaration.png}
+}
+\subcaptionbox{Description of \tttype{Nat}\label{fig:descnat}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/NatDescription.png}
+
+}
+\caption{The Natural numbers (\tttype{Nat})}
+\end{center}
+\end{figure}
+
+Figure~\ref{fig:decllist} shows one of the classical datatypes in functional programming languages, namely \tttype{List}.
+Unlike \tttype{Pair} and \tttype{Either} which were monomorphic in the presented examples, this time \tttype{List} is polymorphic in its elements.
+The way to represent parameters is by having them as an argument to the description value, which allows them to be qualified over the whole description.
+The description value itself is built using the previously described methods and is shown in Figure~\ref{fig:desclist}. There is a Boolean argument \ttvar{isNil}, which encodes the choice between the two constructors of the list,
+\ttconstructor{Nil} and \ttconstructor{Cons}. The description for \ttconstructor{Nil} is simply \ttconstructor{Ret} since it doesn't accept any arguments, and the description for \ttconstructor{Cons} takes an argument of the parameter type (the head of the list)
+a recursive argument (the tail of the list) and ends the description.
+
+\begin{figure}[ht]
+\begin{center}
+  \subcaptionbox{Declaration of \tttype{List}\label{fig:decllist}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/ListDeclaration.png}
+}
+\subcaptionbox{Description of \tttype{List}\label{fig:desclist}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/ListDescription.png}
+
+}
+\caption{A polymorphic list of elements}
+\end{center}
+\end{figure}
+
+\subsection{Indexing descriptions}
+\label{sub:Indexingdescriptions}
+
+In order to allow datatypes to be indexed by values of various types, the description structure takes a parameter that describes what the type of indices must be.
+Figure~\ref{fig:descriptiondatatype} shows an updated version of Figure~\ref{fig:simpldescdatatype}, that contains the necessary parameter \ttvar{ix} for indexing datatypes.
+The constructors \ttconstructor{Ret} and \ttconstructor{Rec}, must also be updated to take a value of \ttvar{ix} in order to represent what the index for the result type and recursive argument must be respectively.
+For descriptions that don't require indices, they can be converted to indexed descriptions using the unit type \tttype{Unit} (or using its syntactic form \tttype{()}) as index.
+
+\begin{figure}[ht]
+\begin{center}
     \includegraphics[scale=0.5]{Figures/ADescriptionforDatatypes.png}
 \end{center}
-\caption{Datatype for describing other Datatypes}
+\caption{Description for datatypes with possible indices}
 \label{fig:descriptiondatatype}
 \end{figure}
 
-In order to allow datatypes to be indexed by values of various types, the description structure takes a parameter that describes what the type of indices must be.
-Additionally, the description has three constructors:
-\begin{itemize}
-  \item  \texttt{Ret} represents the end of a description and takes as argument what value the index of the resulting type must be
-  \item  \texttt{Arg} represents the addition of an argument of any type to a given description; the first argument of \texttt{Arg} is the type of argument expected and the second argument is the rest of the description dependent on a value of that type.
-  \item  \texttt{Rec} represents a recursive argument of the described datatype and take two arguments: the index of the recursive instance of the datatype and the rest of the description.
-\end{itemize}
+In order to given an example on how an indexed datatype looks like, let us take a look at \tttype{Vec} from Figure~\ref{fig:anatomydatatype}. Figure~\ref{fig:descvec} shows the description of \tttype{Vec} with comparable annotations.
 
 \begin{figure}[ht]
 \begin{center}
     \includegraphics[scale=0.5]{Figures/VectorDescription.png}
 \end{center}
-\caption{Described version of Vec}
+\caption{Described version of \tttype{Vec}}
 \label{fig:descvec}
 \end{figure}
 
-The astute reader might at this point have some questions such as: how is it possible to choose between different constructors? where do parameters go in the description? and why is there only one type for indicies?
-I will now try to answer these questions using Figure~\ref{fig:descvec}.
 
-One step towards building a value that describes a particular datatype is defining its type signature
-including what types the parameters and indices of the finished datatype are. In our example of Figure~\ref{fig:descvec},
-the parameter is specified to be given as an argument to the description value and is not represented internally as such in the final description, i.e., it is not possible to distinguish a parameter from other values when the final description is constructed.
-Contrary to parameters, the type of indices must be specified as an internal part of the description in order to ensure that indices specified by recursive arguments match in the final description.
-Since \texttt{Desc} only takes one argument for specifying the types of indices, more demanding datatypes will need to collect multiple indices into one dependent pair, e.g.,
-a datatype with signature \texttt{(n : Nat) -> Fin n -> Type} must use the dependent pair \texttt{(n : Nat ** Fin n)} as the type for its index.
+The type signature for the description of \tttype{Vec} mimics the one for the actual datatype closely, but there are nonetheless some differences.
+There is now an explicit distinction between parameters and indices; the type for a parameter can still be specified as an argument for the description value,
+whereas the type of an index must be provided to the \tttype{Desc} type constructor.
+This is to ensure that all provided indices conform to same expected type, while still allowing the values to change inside the description.
 
-Another step required for describing a datatype is defining how to choose a particular constructor.
-A solution could be the one presented in Figure~\ref{fig:descvec} where a boolean argument \texttt{isNil} is used to decide whether the resulting description should be for the \texttt{Nil} or \texttt{Cons} constructors.
-However, since this solutions is fairly primitive and doesn't capture information such as constructor tags, a better but more complex encoding will be presented in Section~\ref{sub:AnInformativeEncodingofConstructors}.
+A Boolean argument \ttvar{isNil} is used to describe the choice between constructors \ttconstructor{Nil} and \ttconstructor{Cons}.
+The constructor \ttconstructor{Nil} doesn't contain any data so we simply use \ttconstructor{Ret~Z}, this indicates that the description is finished and the resulting type is expected to have index \ttconstructor{Z}, analogously to Figure~\ref{fig:anatomydatatype}.
+The constructor \ttconstructor{Cons} takes first two ordinary arguments: a \tttype{Nat} argument
+to be used to describe the necessary indices, and an argument of the parameter \ttvar{a}. Following these arguments we take a recursive argument---specified using \ttconstructor{Rec}---that must satisfy to have the value of the input \tttype{Nat} argument \ttvar{n} as index, i.e. the argument must be of type \tttype{Vec}~\ttvar{a~n}. We finish the description with \ttconstructor{Ret} and specify that the resulting index must be \ttconstructor{S}~\ttvar{n} as expected.
 
-Finally, the constructors themselves must be described.
-\texttt{Nil} doesn't contain any data so we simply use \texttt{Ret Z} which indicates that the description is finished and the resulting type is expected to have index \texttt{Z}, analogously to Figure~\ref{fig:anatomydatatype}.
-\texttt{Cons} takes first two ordinary arguments: a \texttt{Nat} argument\footnote{Implicit arguments is a feature of Idris that only works on top-level declarations and as such are all specified explicitly in the description.} to be used to describe the necessary indices, and an argument of the parameter \texttt{a}. Following these arguments we take a recursive argument---specified using \texttt{Rec}---that must satisfy to have the value of the input \texttt{Nat} argument \texttt{n} as index, i.e. the argument must be of type \texttt{Vect a n}. We finish the description with \texttt{Ret} and specify that the resulting index must be \texttt{S n} as expected.
+\subsubsection{Challenges and limitations}
+Even though it was possible to describe a variety of datatypes there are still a few questions that can be raised, such as: How is it possible to choose between more than two constructors? Why is there only one type for indices?
+Why aren't the type of parameters required to be encoded inside the description datatype itself? I seek to clarify these questions in the following paragraphs.
 
-\subsection{An Informative Encoding of Constructors}
+To encode the choice of more than two constructors, a simple solution could be to nest multiple Boolean values acting as a form of binary enumeration of tags.
+However this encoding is fairly crude: it doesn't capture important information such as the names of constructors, requires a series of possibly complicated tests and is not easily extendible if one wants to extend descriptions
+with new constructors. In Section~\ref{sub:AnInformativeEncodingofConstructors}, I will present a more sophisticated encoding that doesn't suffer from these limitations.
+
+For more demanding datatypes that needs more than one type of index, the indices must be uncurried using dependent pairs.
+For example, a datatype with signature \texttt{(}\ttvar{n}~\texttt{:}~\tttype{Nat}\texttt{)~->~}\tttype{Fin}~\ttvar{n}~\texttt{->}~\tttype{Type} must use the dependent pair \tttype{(}\ttvar{n}~\texttt{:}~\tttype{Nat}~\tttype{**}~\tttype{Fin}~\ttvar{n}\tttype{)} as the type for its index.
+
+Finally, since parameters are usually qualified over the whole datatype (\textit{i.e.}, they do not change) it is possible to just accept them as external arguments when building
+a description. However, this can encoding can exclude interesting generic programs for being written such as the functorial map. In Chapter~\ref{cha:LevitatingIdris}, I will discuss a modification to the description datatype that permits encoding the types of
+parameters directly.
+
+\subsection{An informative encoding of constructors}
 \label{sub:AnInformativeEncodingofConstructors}
-In Section~\ref{sub:ADescriptionforDatatypes} I had presented the choice of constructors using a boolean variable and concluded that it was both primitive and lacked
-necessary information such as the tag of a particular constructor. I will in this section present a more informative encoding of constructors, and show how it is possible to use that encoding when describing datatypes.
+In Section~\ref{sub:ADescriptionforDatatypes} a Boolean variable was used to determine the choice between two constructors, and concluded that his approach had multiple disadvantages.
+First of all, the Boolean encoding doesn't capture the names of the respective constructors which might be important when it is desired to pretty print or serialise a data structure.
+Secondly, when there are more than two constructors mapping multiple can quickly become complicated requiring multiple arguments and a less than straightforward way of mapping these Boolean values to actual descriptions, e.g.,
+should two Boolean values encode the choice between 3 or 4 constructors?
+Finally, and perhaps more importantly, it is not easy to modify the number of constructors easily with the Boolean encoding. That is, it might be desirable to compute a new description from a provided one and in that process add a new constructor,
+\textit{e.g.}, adding a default ``error'' constructor to each datatype.
+This section presents a more informative encoding of constructors, and shows how it is possible to use that encoding when describing non-trivial datatypes.
 
-In order to represent which constructors are available we first are going to declare two types as shown in Figure~\ref{fig:ctorlabels}: \texttt{CLabel} which represents a name for a constructor, and \texttt{CEnum} which
-represents a list of constructor names. Figure~\ref{fig:vectctors} show an example of how to represent the available constructor names of \texttt{Vec}.
+To represent which constructors are available we first are going to declare two types as shown in Figure~\ref{fig:ctorlabels}: \ttdec{CLabel} which represents a name for a constructor, and \ttdec{CEnum} which
+represents a list of constructor names. Figure~\ref{fig:vectctors} show an example of how to represent the available constructor names of \tttype{Vec}.
 
 
 \begin{figure}[ht]
@@ -196,8 +341,13 @@ represents a list of constructor names. Figure~\ref{fig:vectctors} show an examp
 \end{center}
 \end{figure}
 
-Now that it is possible to represent the available constructors, we can encode a way of choosing a particular constructor tag. Figure~\ref{fig:ctortags} shows a datatype \texttt{Tag} with two constructors:
-\texttt{TZ} which represents the constructor that is on top of the current list and \texttt{TS} which represents a constructor further along the list. As such, \texttt{Tag} specifies is valid index into a (non-empty) list of constructor tags.
+Now that it is possible to represent the available constructors, we can encode a way of choosing a particular constructor tag. Figure~\ref{fig:ctortags} shows a datatype \tttype{Tag} with two constructors:
+\ttconstructor{TZ} which represents the constructor that is on top of the current list and \ttconstructor{TS} which represents a constructor further along the list. As such, \tttype{Tag} specifies is valid index into a (non-empty) list of constructor tags.
+
+This encoding has multiple advantages: it ensures that all constructor labels stored in our data exist in the expected list of constructors, it ensures that all datatypes which are dependent on a tag must have at least one constructor, and as a consequence
+it is possible to specify the empty type by simply requiring a tag on an empty list of expected constructors (since such value would be impossible to create).
+This encoding eases the implementation of automatically retrieving a tag given a constructor label using tactics in Idris, which might save some time when values
+are constructed manually.
 
 \begin{figure}[ht]
 \begin{center}
@@ -207,14 +357,35 @@ Now that it is possible to represent the available constructors, we can encode a
 \label{fig:ctortags}
 \end{figure}
 
-\subsection{A Constructive Type of Choice}
-\label{sub:AConstructiveTypeofChoice}
+For the constructors of \tttype{Vec}, Figure~\ref{fig:vecctor} shows an example on what the tag values are. For \ttconstructor{Nil} the value is \ttconstructor{TZ} since it is the first in the list of \ttdec{VecCtors}, and for \ttconstructor{Cons} the value
+is \ttconstructor{TS~TZ} since it is the second. Since there are only two elements in \ttdec{VecCtors}, it shouldn't be possible to create any other valid constructor, and as such it is a good representative for enumerating the constructors of \tttype{Vec}.
 
-Given a specific constructor tag, one question is then how it is possible to map these constructor tags to specific values? Figure~\ref{fig:smallpiop} presents $\pi$ (small pi operator) which represents
-the type of a map from a list of constructor tags to a corresponding list of values.
-The calculated type might look atypical at first, however on a closer look it is actually analogous to how lists are represented in Lisp.
-The calculated type consists of nested pair types where the first element is the type of the value mapped for the current constructor
-and the second element is the mapping for the rest of the constructors; finally, the list ends with the unit type \texttt{()} similarly to \texttt{nil} in Lisp.
+\begin{figure}[ht]
+\begin{center}
+  \subcaptionbox{Tag for \ttconstructor{Nil}\label{fig:vecctornil}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/VectorNilTag.png}
+}
+\subcaptionbox{Tag for \ttconstructor{Cons}\label{fig:vecctorcons}}[.45\textwidth]{
+    \includegraphics[scale=0.5]{Figures/VectorConsTag.png}
+
+}
+\caption{Example: Tags for constructors of \tttype{Vec}}
+\label{fig:vecctor}
+\end{center}
+\end{figure}
+
+
+\subsection{A constructive type of choice}
+\label{sub:AConstructiveTypeofChoice}
+Similarly to how \texttt{\textbf{if}} was used to map \tttype{Bool} values to the descriptions of the various constructors of a datatype in Section~\ref{sub:ADescriptionforDatatypes}, it is desirable to have a way
+to map \tttype{Tag} values. While an initial proposal would be to use \texttt{\textbf{case of}} to do such mapping, it doesn't composes well with when the number of constructors are extended.
+This is because it requires that all possible cases are matched on, or at least the programmer must provide a suitable function to handle the rest of the cases (which is often an issue when doing generic programming).
+The following section will describe the \ttdec{switch} function that allows mapping \tttype{Tag} values while remaining extensible.
+
+Since the number of constructors for a datatype can vary in length, it is necessary to calculate a type that allows mapping the tag of each constructor to a suitable value (shown in Figure~\ref{fig:smallpiop}). 
+It essentially is a function that maps the list of constructors to a series of right-nested pairs such that there is one value for each constructor tag, and ends with \tttype{()}.
+The type of the resulting value \ttvar{prop} can be dependent on the input constructor tag, and therefore the function is called $\pi$ or the \textit{small pi operator}.
+The operator $\pi$ is small in the sense that unlike the dependent function type $\Pi$ which allows the result to dependent on any type of input, $\pi$ only allows a dependency on constructor tags.
 
 \begin{figure}[ht]
 \begin{center}
@@ -224,8 +395,9 @@ and the second element is the mapping for the rest of the constructors; finally,
 \label{fig:smallpiop}
 \end{figure}
 
-The \texttt{switch} function shown in Figure~\ref{fig:switchctor} uses a specific constructor tag to lookup the corresponding value given by the $\pi$ mapping.
-When the given $\pi$ mapping is given inline switch works like a version of the \texttt{case of} operator on constructor tags, which can be useful when specifying descriptions for a particular constructor.
+Given a way to map a list of constructors to a list of values using $\pi$, it is now possible to define a function \ttdec{switch} which can look up the correct value for a particular \tttype{Tag}.
+The function \ttdec{switch} is shown in Figure~\ref{fig:switchctor} and has two branches: if the constructor to map is the first one in a list of constructors it simply returns the first value in the corresponding mapping, otherwise
+it continues the search using the rest of the provided elements (skipping the first constructor and its corresponding mapping).
 
 \begin{figure}[ht]
 \begin{center}
@@ -235,7 +407,7 @@ When the given $\pi$ mapping is given inline switch works like a version of the 
 \label{fig:switchctor}
 \end{figure}
 
-As an example, Figure~\ref{fig:vecdescim} shows the description of \texttt{Vec} again, but this time using the new constructor tag encoding instead of a boolean variable.
+As an example, Figure~\ref{fig:vecdescim} shows the description of \tttype{Vec} (from Figure~\ref{fig:descvec}) again, but this time using the new constructor tag encoding instead of a Boolean variable.
 While the description might initially seem more complicated than before, it has a couple of clear advantages: the encoding now contain the constructor tag and it is possible to choose between more than two constructors at the same time.
 
 \begin{figure}[H]
@@ -246,50 +418,12 @@ While the description might initially seem more complicated than before, it has 
 \label{fig:vecdescim}
 \end{figure}
 
-%\subsection{Advanced Example: Representing a Finger Tree}
-%\label{sub:Advanced Example:RepresentingaFingerTree}
-
-
-%\begin{figure}[ht]
-%\begin{center}
-    %\includegraphics[scale=0.5]{Figures/AdvancedExampleNodeData.png}
-%\end{center}
-%\caption{Test}
-%\label{fig:exnodedata}
-%\end{figure}
-
-%\begin{figure}[ht]
-%\begin{center}
-    %\includegraphics[scale=0.5]{Figures/AdvancedExampleNodeDescription.png}
-%\end{center}
-%\caption{}
-%\label{fig:exnodedesc}
-%\end{figure}
-
-%\begin{figure}[ht]
-%\begin{center}
-    %\includegraphics[scale=0.5]{Figures/AdvancedExampleFingerTreeData.png}
-%\end{center}
-%\caption{Test}
-%\label{fig:exftdata}
-%\end{figure}
-
-%\begin{figure}[ht]
-%\begin{center}
-    %\includegraphics[scale=0.5]{Figures/AdvancedExampleFingerTreeDescription.png}
-%\end{center}
-%\caption{}
-%\label{fig:exftdesc}
-%\end{figure}
-
-
-
-\section{Synthesising Descriptions to Types}
+\section{Synthesising descriptions to types}
 \label{sec:SynthesisingDescriptionstoTypes}
 In Section~\ref{sec:TheGenericStructureofInductiveDataTypes} I had shown how it was possible to create descriptions that support many common datatypes in Idris.
-In this section I will present a way to convert or \textit{synthesise} these descriptions to actual types in Idris, that allows the programmer to construct values of these described types with actual data.
+In this section I will present a way to convert or \textit{synthesise} these descriptions to actual types, that allows the programmer to construct values of these described types with actual data.
 
-\subsection{A Heterogeneous Form of Equality}
+\subsection{A heterogeneous form of equality}
 \label{sub:AHeterogeneousFormofEquality}
 Before we proceed with the actual synthesis I would like to present one of the important types that is needed.
 The type is called heterogeneous equality and is built into the core language theory of Idris.
@@ -300,18 +434,18 @@ The type is called heterogeneous equality and is built into the core language th
 \caption{Heterogeneous Equality of Values}
 \label{fig:heteq}
 \end{figure}
-What the heterogeneous equality type allows us to do is that it allows us to construct a type that equate values of different types.
-However in order to actually construct a value of such type (i.e., provide a proof for the equality), we have to use \texttt{Refl} which will only succeed if the compiler believes that such two values are really the same.
+Heterogeneous equality takes two values of different types and constructors a type.
+In order to actually construct a value of such type (i.e., provide a proof for the equality), we have to use \ttconstructor{Refl} which will only succeed if the compiler believes that such two values (and their types) are really the same.
 This provides a simple yet powerful way to constrain values in order to ensure that any given input must conform to some expected form.
 
-\subsection{Datatype Synthesis}
+\subsection{Datatype synthesis}
 \label{sub:DatatypeSynthesis}
-It is finally time to convert the description to an actual type. Figure~\ref{fig:synthdata} shows the \texttt{Synthesise} method which takes a description, the final form of that datatype and the resulting index, then it returns a type which can contain the described data.
+It is finally time to convert the description to an actual type. Figure~\ref{fig:synthdata} shows the \ttdec{Synthesise} method which takes a description, the final form of that datatype and the resulting index, then it returns a type which can contain the described data.
 
 \begin{itemize}
-  \item If we reach the end of the description, i.e. \texttt{Ret}, the only thing that we need to ensure is that the provided resulting index matches the expected index provided in the description. In order to apply such constraint we use the heterogeneous equality type (see Section~\ref{sub:AHeterogeneousFormofEquality}).
-  \item For recursive arguments, i.e. \texttt{Rec}, we construct a dependent pair where the first argument contains a value of the fully-synthesised type with the given index and the second argument contains the synthesised version of the rest of the provided description. The reason that we need the final form of the datatype in order to construct a recursive argument is due to the fact that if we call \texttt{Synthesise} recursively on that argument we would get stuck in an infinite loop!
-  \item For ordinary arguments, i.e. \texttt{Arg}, we also create a dependent pair. The first argument of the dependent pair is a value \texttt{arg} of the provided type \texttt{a}, and the second argument is the synthesis of the rest of the provided description \texttt{d} given \texttt{arg}. This is isomorphic to how an ordinary constructor would store the data and as such the dependent pair serves a good target structure for our synthesis.
+  \item If we reach the end of the description, i.e. \ttconstructor{Ret}, the only thing that we need to ensure is that the provided resulting index matches the expected index provided in the description. In order to apply such constraint we use the heterogeneous equality type (see Section~\ref{sub:AHeterogeneousFormofEquality}).
+  \item For recursive arguments, i.e. \ttconstructor{Rec}, we construct a dependent pair where the first argument contains a value of the fully-synthesised type with the given index and the second argument contains the synthesised version of the rest of the provided description. The reason that we need the final form of the datatype in order to construct a recursive argument is due to the fact that if we call \ttdec{Synthesise} recursively on that argument we would get stuck in an infinite loop!
+  \item For ordinary arguments, i.e. \ttconstructor{Arg}, we also create a dependent pair. The first argument of the dependent pair is a value \ttvar{arg} of the provided type \ttvar{a}, and the second argument is the synthesis of the rest of the provided description \ttvar{d} given \ttvar{arg}. This is isomorphic to how an ordinary constructor would store the data and as such the dependent pair serves a good target structure for our synthesis.
 \end{itemize}
 Since the dependent pair is used as the target type for the synthesis, it itself must be a core part of the type theory similarly to the heterogeneous equality, if we want to treat all datatype declarations as describable.
 
@@ -323,9 +457,9 @@ Since the dependent pair is used as the target type for the synthesis, it itself
 \label{fig:synthdata}
 \end{figure}
 
-We are able to synthesise our descriptions to actual types using \texttt{Synthesise}; However, an issue occurs when we want to use it since it requires the final form of the described datatype as input but the only way to synthesise the datatype is using \texttt{Synthesise} itself.
-In order to ``tie the knot'' and complete input for \texttt{Synthesise}, we define a final datatype \texttt{Data} in the core theory which takes a description and provides the final form of the described datatype (see Figure~\ref{fig:datafromdesc}).
-\texttt{Data} has only one constructor namely \texttt{Con} which takes as input the synthesised version of the description \texttt{d} with \texttt{Data d} serving as argument for the final form of the datatype in \texttt{Synthesise}. This works since each time we face a recursive argument it must be constructed using \texttt{Con} which avoids a infinite loop in \texttt{Synthesise} as long as the elements that are constructed are smaller in size; Luckily, the typesystem of Idris ensures \textit{totality} of functions and as such doesn't permit the creation of values that are infinitely sized except when the arguments are explicitly declared as such using the \texttt{Inf} type.
+We are able to synthesise our descriptions to actual types using \ttdec{Synthesise}; However, an issue occurs when we want to use it since it requires the final form of the described datatype as input but the only way to synthesise the datatype is using \ttdec{Synthesise} itself.
+In order to ``tie the knot'' and complete input for \ttdec{Synthesise}, we define a final datatype \tttype{Data} that takes a description and provides the final form of the described datatype (see Figure~\ref{fig:datafromdesc}).
+\tttype{Data} has only one constructor namely \ttconstructor{Con} which takes as input the synthesised version of the description \ttvar{d} with \tttype{Data}~\ttvar{d} serving as argument for the final form of the datatype in \ttdec{Synthesise}. This works since each time we face a recursive argument it must be constructed using \ttconstructor{Con} which avoids a infinite loop in \ttdec{Synthesise} as long as the elements that are constructed are smaller in size; Luckily, the typesystem of Idris ensures \textit{totality} of functions and as such doesn't permit the creation of values that are infinitely sized except when the arguments are explicitly declared as such using the \tttype{Inf} type.
 
 \begin{figure}[ht]
 \begin{center}
@@ -335,8 +469,13 @@ In order to ``tie the knot'' and complete input for \texttt{Synthesise}, we defi
 \label{fig:datafromdesc}
 \end{figure}
 
-\subsection{Example: Constructing Vectors}
+\subsection{Example: Constructing vectors}
 \label{sub:Example:Constructing Vectors}
+
+To get a more concrete intuition on how it is possible to construct data values of described types, this section will look at the synthesised version of \tttype{Vec}.
+Figure~\ref{fig:synthversvecdesc} shows \ttdec{Vec} which is a function mimicking its corresponding type constructor, and it even shares the same type signature.
+The function \ttdec{Vec} returns a described type using \tttype{Desc} passing along the description of \tttype{Vec} and its required parameters (\textit{i.e.}, \ttdec{VecDesc}~\ttvar{a}), 
+and additionally the expected value of the result index (\textit{i.e.}, \ttvar{n}).
 
 \begin{figure}[ht]
 \begin{center}
@@ -346,6 +485,15 @@ In order to ``tie the knot'' and complete input for \texttt{Synthesise}, we defi
 \label{fig:synthversvecdesc}
 \end{figure}
 
+A simple example representing the vector \ttliteral{[1, 2, 3]} is presented in Figure~\ref{fig:exmvecsynthvecdesc}. Although the value might seem a bit overwhelming at first, it follows a simple pattern:
+Each time a value of \ttdec{Vec} is needed \ttconstructor{Con} is used, then it is followed by its required arguments in the form of nested dependent pairs, and finally it ends with \tttype{Refl} which ensures
+that the provided index of the value match up with the expected one.
+As such, it can be observed that there are 4 occurences of \ttconstructor{Con} and \ttconstructor{Refl} in the example, three for the various applications
+of \ttconstructor{Cons} and one for the application of \ttconstructor{Nil}. For all cases the first two arguments represent the constructor label and associated tag. 
+For \ttconstructor{Cons} the first following argument is the length of the rest of the vector (the value of index \ttvar{n}) followed by the value of the list head and the list tail, ending with \tttype{Refl}.
+For \ttconstructor{Nil} the value is ended with \ttconstructor{Refl} since it doesn't contain any data.
+
+
 \begin{figure}[ht]
 \begin{center}
     \includegraphics[scale=0.5]{Figures/VectorSynthesisedExample.png}
@@ -353,6 +501,15 @@ In order to ``tie the knot'' and complete input for \texttt{Synthesise}, we defi
 \caption{Example Vector representing ``[1,2,3]`` as a Value of a Synthesised Description}
 \label{fig:exmvecsynthvecdesc}
 \end{figure}
+
+As might have become apparent there are a couple of shortcomings in the example, or rather the way values of described types are constructed.
+One shortcoming is that there is a lot of boilerplate required when values are constructed, which makes the result somewhat unreadable.
+A solution to overcome that shortcoming is presented in the next paragraph. Another shortcoming is that the resulting terms seem to become very large (and in turn slows down program execution) compared to the original
+version of the datatype. For example, \ttconstructor{Nil} becomes inflated to \ttconstructor{Con~(}\ttliteral{"Nil"}~\ttconstructor{** (TZ ** Refl))} which is significantly more complex. A description on how to improve the size of resulting terms and
+speed up the performance of dependent programs is presented in Chapter~\ref{cha:OptimizingIdrisforFlight}.
+
+In order to make creation of values of described types easier and the resulting terms more readable, it is possible to use functions as synonyms for the constructors.
+Figure~\ref{fig:funcconstrsynthvec} shows \ttdec{Nil} and \ttdec{Cons} as synonyms for the described version of \ttconstructor{Nil} and \ttconstructor{Cons} respectively.
 
 \begin{figure}[ht]
 \begin{center}
@@ -362,6 +519,10 @@ In order to ``tie the knot'' and complete input for \texttt{Synthesise}, we defi
 \label{fig:funcconstrsynthvec}
 \end{figure}
 
+Using the provided synonyms, the constructor of the value in example in Figure~\ref{fig:exmvecsynthvecdesc} becomes simpler and much more readable. Figure~\ref{fig:exmvecsynthvecdescconstrs} shows the updated version,
+and it looks almost exactly like the original value it needed to describe \ttliteral{[1, 2, 3]}.
+
+
 \begin{figure}[ht]
 \begin{center}
     \includegraphics[scale=0.5]{Figures/VectorSynthesisedConstructorsExample.png}
@@ -370,40 +531,58 @@ In order to ``tie the knot'' and complete input for \texttt{Synthesise}, we defi
 \label{fig:exmvecsynthvecdescconstrs}
 \end{figure}
 
-\section{The (Mostly) Gentle Art of Levitation}
+\section{The (mostly) gentle art of levitation}
 \label{sec:TheMostlyGentleArtofLevitation}
-\textit{The elegance of a complete theorem for both ordinary and generic programming. Highlighting of possible issues with performance.}
+\textit{The elegance of a complete theorem for both ordinary and generic programming. Highlighting of possible pitfalls in performance.}
 
-\chapter{Partial Evaluation}
+\begin{figure}
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/ADescriptionForDatatypesExtended.png}
+\end{center}
+\caption{A constructor for \tttype{Desc} to represent higher-order recursion}
+\label{fig:deschrec}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/AConstructiveChoiceDesc.png}
+\end{center}
+\caption{A specialised version of \ttdec{switch} which returns descriptions}
+\label{fig:switchdesc}
+\end{figure}
+
+
+
+\chapter{Partial evaluation}
 \label{cha:PartialEvaluation}
 
-\section{Functions and Constant Inputs}
+\section{Functions and constant inputs}
 \label{sec:FunctionsandConstantInputs}
 \textit{General introduction about partial evaluation.}
 
-\section{Binding-time Analyses of Programs}
+\section{Binding-time analyses of programs}
 \label{sec:Binding-timeAnalysisofPrograms}
 \textit{Finding the relevant constant parts of the program.}
 
-\section{Specialisation as a Form of Optimization}
+\section{Specialisation as a form of optimisation}
 \label{sec:SpecialisationasaFormofOptimization}
 \textit{Performance benefits of program specialisation. Pitfalls.}
 
 \chapter{Levitating Idris}
 \label{cha:LevitatingIdris}
 
-\section{A Pragmatic Implementation of Levitation}
+\section{A pragmatic implementation of levitation}
 \label{sec:APragmaticImplementationofLevitation}
 \textit{How the general concept of levitation was transferred to Idris.}
 
-\section{Description Synthesis from Ordinary Data Declarations}
+\section{Description synthesis from ordinary data declarations}
 \label{sec:DescriptionSynthesisFromOrdinaryDataDeclarations}
 \textit{How ordinary data-declarations are synthesized to levitational descriptions.}
 
-\chapter{Practical Examples}
+\chapter{Practical examples}
 \label{cha:PracticalExamples}
 
-\section{Generic Deriving}
+\section{Generic deriving}
 \label{sec:GenericDeriving}
 \textit{Examples of generic deriving of algorithms like decidable equality, pretty printing and possibly eliminators via generic structure.}
 
@@ -412,20 +591,20 @@ In order to ``tie the knot'' and complete input for \texttt{Synthesise}, we defi
 \textit{A version of the Uniplate library for Idris based on} \url{http://community.haskell.org/~ndm/uniplate/} \textit{and} \url{http://www-ps.informatik.uni-kiel.de/~sebf/projects/traversal.html} \textit{.
 This is useful for traversing structures in a generic fashion and especially when dealing with small changes in large data structures (such as compiler ADTs)}
 
-\chapter{Optimizing Idris for Flight}
+\chapter{Optimising Idris for flight}
 \label{cha:OptimizingIdrisforFlight}
 
-\section{Specialising Constructors for Specific Types}
+\section{Specialising constructors for specific types}
 \label{sec:SpecialisingConstructorsforSpecificTypes}
 \textit{How generalized constructors of described types, are specialised as ordinary data structures.}
 
-\section{Online Erasure of Unused Arguments}
+\section{Online erasure of unused arguments}
 \label{sec:OnlineErasureofUnusedArguments}
 \textit{How some type infromation is to be erased at compile time to reduce elaboration overhead. Very hypothetical.}
 
-\section{Static Initialization of Generic Functions}
+\section{Static initialization of generic functions}
 \label{sec:StaticInitializationofGenericFunctions}
-\textit{How algorithms that are dependent on the generic structure of a datatype are optimized. Discuss benefits of having a JIT/Profiling information for future work.}
+\textit{How algorithms that are dependent on the generic structure of a datatype are optimised. Discuss benefits of having a JIT/Profiling information for future work.}
 
 \chapter{Evaluation}
 \label{cha:Evaluation}
@@ -433,7 +612,7 @@ This is useful for traversing structures in a generic fashion and especially whe
 \chapter{Discussion}
 \label{cha:Discussion}
 
-\section{Future Work}
+\section{Future work}
 \label{sec:FutureWork}
 
 \section{Conclusion}
