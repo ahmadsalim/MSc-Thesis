@@ -4,6 +4,7 @@ data Desc : (ix : Type) -> Type where
   Ret  : ix -> Desc ix
   Arg  : (a : Type) -> (a -> Desc ix) -> Desc ix
   Rec  : ix -> Desc ix -> Desc ix
+  HRec : ix -> (a : Type) -> Desc ix -> Desc ix
 
 VecDesc : (a : Type) -> Desc Nat
 VecDesc a =
@@ -55,6 +56,8 @@ Synthesise (Rec j d)    x i =
   (rec : x j ** Synthesise d x i)
 Synthesise (Arg a d)    x i =
   (arg : a ** Synthesise (d arg) x i)
+Synthesise (HRec j a d) x i =
+  (arg : a -> x j ** Synthesise d x i)
 
 data Data : {ix : Type} -> Desc ix -> ix -> Type where
   Con : {d : Desc ix} -> {i : ix}
@@ -78,8 +81,21 @@ Nil = Con ("Nil" ** (TZ ** refl))
 Cons : {a : Type} -> {n : Nat}
     -> a -> Vec a n -> Vec a (S n)
 Cons {n} x xs = Con ("Cons" ** (TS TZ ** (n ** 
-              (x ** (xs ** refl))))) 
+                  (x ** (xs ** refl))))) 
 
-exampleVec' : Vec Nat 3
-exampleVec' = Cons 1 (Cons 2 (Cons 3 Nil))
+{-exampleVec' : Vec Nat 3-}
+{-exampleVec' = Cons (the Nat 1) (Cons 2 (Cons 3 Nil))-}
 
+switchDesc : {e : CEnum} -> {ix : Type} -> SPi e (\l => \t => Desc ix) -> ((l' : CLabel) -> (t' : Tag l' e) -> Desc ix)
+switchDesc {e = e} {ix = ix} cs = switch e (\l => \t => Desc ix) cs
+
+
+DescDesc : (ix : Type) -> Desc ()
+DescDesc ix =
+  Arg CLabel (\l =>
+    Arg (Tag l ["Ret", "Arg", "Rec", "HRec"])
+      (switchDesc (Arg ix (\i => Ret ()),
+                  (Arg Type (\a => HRec () a (Ret ())),
+                  (Arg ix (\i => Ret ()),
+                  (Arg ix (\i => Arg Type (\a => Rec () (Ret ()))),
+      ())))) l))

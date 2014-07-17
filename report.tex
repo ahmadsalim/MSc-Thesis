@@ -6,6 +6,7 @@
 \usepackage[]{caption} 
 \usepackage[]{subcaption} 
 \usepackage[]{natbib}
+\usepackage[]{mdframed}
 \bibliographystyle{agsm}
 
 \definecolor{constructor-color}{RGB}{155,187,89}
@@ -19,6 +20,13 @@
 \newcommand{\ttdec}[1]{\textcolor{declared-var-color}{\texttt{#1}}}
 \newcommand{\ttvar}[1]{\textcolor{local-var-color}{\texttt{#1}}}
 \newcommand{\ttliteral}[1]{\textcolor{literal-color}{\texttt{#1}}}
+
+\newenvironment{asideblock}
+  {\begin{mdframed}[style=0,%
+      leftline=false,rightline=false,leftmargin=2em,rightmargin=2em,%
+          innerleftmargin=0pt,innerrightmargin=0pt,linewidth=0.75pt,%
+      skipabove=7pt,skipbelow=7pt]\small}
+  {\end{mdframed}}
 
 \settitle{The Practical Guide to Levitation}
 \setauthor{Ahmad Salim Al-Sibahi}
@@ -146,6 +154,20 @@ Following the tag, the data constructor declaration contains the types of the ar
 In our example two constructors are declared, \ttconstructor{Nil} and \ttconstructor{Cons}.
 Constructor \ttconstructor{Nil} doesn't hold any data, so it only needs to define the resulting type which is \tttype{Vec}~\ttvar{a}~\ttconstructor{Z} (a vector with length 0).
 Constructor \ttconstructor{Cons} contains three different types of arguments: an ordinary implicit argument, an ordinary explicit argument, and an explicit argument of the type itself (recursive); the resulting type for \ttconstructor{Cons} is \tttype{Vec}~\ttvar{a}~\texttt{(}\ttconstructor{S}~\ttvar{n}\texttt{)}, that is, a vector of length 1+n where n is the length of the recursive argument.
+
+\begin{asideblock}
+  The colouring scheme for code presented in this paper uses the following conventions:
+  \begin{quote}
+  \begin{description}
+    \item[\tttype{Blue}] is used for type constructors
+    \item[\ttconstructor{Green}] is used for data constructors
+    \item[\ttdec{Dark Red}] is used for top-level declarations
+    \item[\ttvar{Light Red}] is used for locally-bound variables
+    \item[\ttliteral{Purple}] is used for literals (integer, string, etc.)
+  \end{description}
+  \end{quote}
+
+\end{asideblock}
 
 \subsection{A description for datatypes}
 \label{sub:ADescriptionforDatatypes}
@@ -533,9 +555,21 @@ and it looks almost exactly like the original value it needed to describe \ttlit
 
 \section{The (mostly) gentle art of levitation}
 \label{sec:TheMostlyGentleArtofLevitation}
-\textit{The elegance of a complete theorem for both ordinary and generic programming. Highlighting of possible pitfalls in performance.}
+In the previous sections, I had presented a series of constructions that makes it possible to have described types.
+What may have become apparent for the user is that many of these constructions such as \tttype{Data}, \tttype{Tag} and \ttdec{switch} cannot themselves be described since
+they are necessary dependencies for having descriptions.
+However, what might be surprising is that the description type itself \tttype{Desc}, isn't in fact limited by such constraint
+and can be described itself.
+This is the key point addressed by \cite{Chapman:2010:GAL:1863543.1863547} in "The gentle art of levitation".
 
-\begin{figure}
+The description datatype \tttype{Desc} contains many of the constructors needed to describe itself.
+However, one might experience trouble when trying to describe \ttconstructor{Arg} since it requires an argument of the following type:
+\texttt{(}\ttvar{a}~->\tttype{Desc}~\ttvar{ix}\texttt{)}.
+This argument describes a function which result type is the datatype itself (a so-called higher-order inductive argument), which \ttconstructor{Rec} isn't strong enough to express since it only permits recursive values.
+Figure~\ref{fig:deschrec} shows a new constructor \ttconstructor{HRec}, which allows specification of such higher-order inductive arguments taking a type \ttvar{a} which specifies
+the expected input type of such argument in addition to the rest of arguments that are expected by \ttconstructor{Rec}.
+
+\begin{figure}[ht]
 \begin{center}
     \includegraphics[scale=0.5]{Figures/ADescriptionForDatatypesExtended.png}
 \end{center}
@@ -543,15 +577,43 @@ and it looks almost exactly like the original value it needed to describe \ttlit
 \label{fig:deschrec}
 \end{figure}
 
-\begin{figure}
+Similarly to the other constructors of \tttype{Desc}, \ttdec{Synthesise} must be extended with a clause for \ttconstructor{HRec}. Figure~\ref{fig:synthhrec} shows the corresponding clause,
+which looks very similar to the one for \ttconstructor{Rec}, except the first component now requires a function from the provided type \ttvar{a} to the datatype itself instead of just a reference
+to the datatype.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/SynthesisingDataExtended.png}
+\end{center}
+\caption{Synthesising \ttconstructor{HRec} to a real type}
+\label{fig:synthhrec}
+\end{figure}
+
+Finally, all the required constructors are present and it is now possible to piece together a description for \tttype{Desc}. Figure~\ref{fig:descdesc} shows the complete description, including for the newly added
+\ttconstructor{HRec} constructor. The description of \tttype{Desc} is parametrised by the type of indices \ttvar{ix} that possible derived descriptions can have, and is not indexed by anything particularly interesting (the unit type \tttype{()} is used in the figure).
+For each constructor, it matches the original definition presented Figure~\ref{fig:descriptiondatatype}. The only interesting case is the one for \ttconstructor{Arg}, which uses \ttconstructor{HRec ()}~\ttvar{a}~\texttt{(}\ttconstructor{Ret ()}\texttt{)} to represent the higher-order inductive argument \texttt{(}\ttvar{a}~->~\tttype{Desc}~\ttvar{ix}\texttt{)}.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/DescriptionDescription.png}
+\end{center}
+\caption{Describing the \tttype{Desc} datatype itself}
+\label{fig:descdesc}
+\end{figure}
+
+Perhaps, the key thing to notice is that a function \ttdec{switchDesc} was used instead of \ttdec{switch} when describing \tttype{Desc}.
+Figure~\ref{fig:switchdesc} shows how to \ttdec{switchDesc} is defined by specialising \ttdec{switch}. However, if \tttype{Desc} is a described type based on \ttdec{DescDesc} then such definition would be circular.
+This is because the general \ttdec{switch} requires the result type \tttype{Desc} to be given as argument, but \tttype{Desc} is dependent on \ttdec{DescDesc}. Therefore, \cite{Chapman:2010:GAL:1863543.1863547} define \ttdec{switchDesc} specially in their type theory, eliding the definition of the body
+and hard-wiring its return type to be \tttype{Desc}\footnote{Of course, such trick only works if there is know to be a type \tttype{Desc} in the meta-theory. However, the knowledge of its element is not necessarily required and it is possible to inspect that
+in a similar fashion to other datatypes.}. Now, \ttdec{DescDesc} can be type checked without any issues and \textit{levitation} is achieved.
+
+\begin{figure}[ht]
 \begin{center}
     \includegraphics[scale=0.5]{Figures/AConstructiveChoiceDesc.png}
 \end{center}
 \caption{A specialised version of \ttdec{switch} which returns descriptions}
 \label{fig:switchdesc}
 \end{figure}
-
-
 
 \chapter{Partial evaluation}
 \label{cha:PartialEvaluation}
