@@ -7,6 +7,7 @@
 \usepackage[]{subcaption} 
 \usepackage[]{natbib}
 \usepackage[]{mdframed}
+\usepackage[]{amsthm} 
 \bibliographystyle{agsm}
 
 \definecolor{constructor-color}{RGB}{155,187,89}
@@ -20,6 +21,9 @@
 \newcommand{\ttdec}[1]{\textcolor{declared-var-color}{\texttt{#1}}}
 \newcommand{\ttvar}[1]{\textcolor{local-var-color}{\texttt{#1}}}
 \newcommand{\ttliteral}[1]{\textcolor{literal-color}{\texttt{#1}}}
+
+\theoremstyle{definition}
+\newtheorem{exmp}{Example}
 
 \newenvironment{asideblock}
   {\begin{mdframed}[style=0,%
@@ -69,16 +73,34 @@ when the work is complete.}
 \section{Context}
 \label{sec:Context}
 Algebraic datatypes such as Boolean values, lists or trees form a core part of modern functional programming.
-Most functions written work directly on such datatypes, but sometimes the function we write aren't directly dependent on the datatype itself and serve only as a repetitive exercise such as for structural equality or pretty printing.
-In fact it seems that it is possible to write an algorithm over the structural definition of the datatype, which the computer then could use to derive an actual function for particular datatypes.
+Most functions written work directly on such datatypes, but sometimes it is the case that there are functions that don't directly dependent on the datatype itself and only are there to serve as a repetitive exercise; For example, in cases as structural equality or pretty printing (see Example~\ref{exmp:prettyprint}).
+In fact it is possible to write an algorithm over the structural definition of the datatype, which the computer then could use to derive an actual function for particular datatypes.
+
+\begin{exmp}
+  Pretty printing a data for any algebraic data type follows a very simple step of procedures:
+  \begin{enumerate}
+    \item Print the name of the constructor
+    \item Iterate through the data elements and pretty print them, with all the data surrounded by parentheses if necessary
+    \begin{enumerate}
+      \item If the data element is a recursive reference to the type itself, then call this procedure recursively (starting at point 1.)
+      \item If the data element is of another type
+      \begin{enumerate}
+        \item Find the correct pretty printing function for that type
+        \item Pretty print the field using the found function
+      \end{enumerate}
+    \end{enumerate}
+    \item Finish printing
+  \end{enumerate}
+  \label{exmp:prettyprint}
+\end{exmp}
 
 Enter the world of \textit{generic programming} where the target datatype is the one describing the structure of other datatypes, often called the \textit{description}.
-While generic programming sounds promising, it is usually seen as a challenging aspect of Haskell to use by ordinary programmers. To represent the description, it is often required to use special language extensions and the programming style tends to require different abstractions than when writing ordinary programs.
+While generic programming sounds promising, it is usually seen as a challenging aspect of Haskell\,\cite[]{haskell98} to use by ordinary programmers. To represent the description, it is often required to use special language extensions\,\cite[]{magalhaes2010generic} and the programming style tends to require different abstractions than when writing ordinary programs.
 
 %A tiny bit of history here?
-However, in dependently-typed languages such as Idris or Agda that it is possible to mitigate such issues.
-Due to the nature of dependently-typed languages it is possible to create a correct description using ordinary datatype definitions.
-Furthermore, \cite{Chapman:2010:GAL:1863543.1863547} show that it is possible to build a self-supporting type system which is able to convert these descriptions to ordinary datatypes (creating so-called \textit{described types}), while still being powerful enough to describe the description datatype itself.
+However, in dependently-typed languages such as Idris\,\cite[]{brady2013idris} or Agda\,\cite[]{norell2009dependently} that it is possible to mitigate such issues.
+Due to the nature of dependently-typed languages it is possible to create a correct description using ordinary datatype definitions\,\cite[]{benke2003universes}.
+Furthermore, \cite{Chapman:2010:GAL:1863543.1863547} show that it is possible to build a self-supporting closed type system which is able to convert these descriptions to ordinary types (creating so-called \textit{described types}), while still being powerful enough to describe the description datatype itself.
 Therefore in such system, generic programming is just a special case of ordinary programming.
 
 %\subsection{The Importance of Genericity in Dependently-typed Languages}
@@ -88,7 +110,8 @@ Therefore in such system, generic programming is just a special case of ordinary
 
 \section{Problem definition}
 \label{sec:ProblemDefinition}
-The current work on generic programming in dependently-typed languages presents both elegant and typesafe ways to represent the structural descriptions of datatypes. Furthermore, it allows the programmer to save both time and boilerplate code by using ordinary programming techniques to do generic programming.
+The current work on generic programming in dependently-typed languages presents both elegant and typesafe ways to represent the structural descriptions of datatypes.
+Furthermore, it allows the programmer to save both time and boilerplate code while reducing mistakes by using ordinary programming techniques to do generic programming.
 
 However, the state of the art is heavily theoretically oriented, which might lead to issues when a system needs to be developed with a practical audience in mind.
 First of all, multiple description formats are often presented, sometimes even in the same paper, which might not be particularly attractive in a practical setting.
@@ -227,7 +250,7 @@ Finally, to specify the end of the description, \ttconstructor{Ret} is used.
 A key aspect of algebraic datatypes is the ability to choose between multiple constructors.
 Figure~\ref{fig:decleither} shows a simple datatype \tttype{Either} which provides two constructors \ttconstructor{Right} and \ttconstructor{Left}, than can hold a value of \tttype{Int} and \tttype{String} respectively.
 
-Since there are no explicit way to encode a choice between multiple constructor, a boolean argument \ttvar{isRight} is used to determine which constructor is specified.
+Since there is no explicit way to encode a choice between multiple constructor, a boolean argument \ttvar{isRight} is used to determine which constructor is specified.
 If the value of \ttvar{isRight} is true then the resulting description is expected to be for the \ttconstructor{Right} constructor, otherwise
 is is expected to be for the \ttconstructor{Left} constructor. The description for each constructor is then specified in a similar fashion to datatypes with one constructor such
 as \tttype{Pair} described above.
@@ -266,7 +289,7 @@ The only addition is that the description for \ttconstructor{Succ} now uses \ttc
 
 Figure~\ref{fig:decllist} shows one of the classical datatypes in functional programming languages, namely \tttype{List}.
 Unlike \tttype{Pair} and \tttype{Either} which were monomorphic in the presented examples, this time \tttype{List} is polymorphic in its elements.
-The way to represent parameters is by having them as an argument to the description value, which allows them to be qualified over the whole description.
+The way to represent parameters is by having them as arguments to the description value, which allows them to be qualified over the whole description.
 The description value itself is built using the previously described methods and is shown in Figure~\ref{fig:desclist}. There is a Boolean argument \ttvar{isNil}, which encodes the choice between the two constructors of the list,
 \ttconstructor{Nil} and \ttconstructor{Cons}. The description for \ttconstructor{Nil} is simply \ttconstructor{Ret} since it doesn't accept any arguments, and the description for \ttconstructor{Cons} takes an argument of the parameter type (the head of the list)
 a recursive argument (the tail of the list) and ends the description.
@@ -287,7 +310,7 @@ a recursive argument (the tail of the list) and ends the description.
 \subsection{Indexing descriptions}
 \label{sub:Indexingdescriptions}
 
-In order to allow datatypes to be indexed by values of various types, the description structure takes a parameter that describes what the type of indices must be.
+In order to allow datatypes to be indexed by values, the description structure takes a parameter that describes what the type of indices must be.
 Figure~\ref{fig:descriptiondatatype} shows an updated version of Figure~\ref{fig:simpldescdatatype}, that contains the necessary parameter \ttvar{ix} for indexing datatypes.
 The constructors \ttconstructor{Ret} and \ttconstructor{Rec}, must also be updated to take a value of \ttvar{ix} in order to represent what the index for the result type and recursive argument must be respectively.
 For descriptions that don't require indices, they can be converted to indexed descriptions using the unit type \tttype{Unit} (or using its syntactic form \tttype{()}) as index.
@@ -340,9 +363,10 @@ parameters directly.
 \label{sub:AnInformativeEncodingofConstructors}
 In Section~\ref{sub:ADescriptionforDatatypes} a Boolean variable was used to determine the choice between two constructors, and concluded that his approach had multiple disadvantages.
 First of all, the Boolean encoding doesn't capture the names of the respective constructors which might be important when it is desired to pretty print or serialise a data structure.
-Secondly, when there are more than two constructors mapping multiple can quickly become complicated requiring multiple arguments and a less than straightforward way of mapping these Boolean values to actual descriptions, e.g.,
+Secondly, when there are more than two constructors, it can quickly become complicated to provide a suitable description.
+Multiple Boolean arguments are required and mapping these Boolean values to description is not exactly straightforward, \textit{e.g.},
 should two Boolean values encode the choice between 3 or 4 constructors?
-Finally, and perhaps more importantly, it is not easy to modify the number of constructors easily with the Boolean encoding. That is, it might be desirable to compute a new description from a provided one and in that process add a new constructor,
+Finally, and perhaps more importantly, it is not easy to modify the number of constructors easily with the Boolean encoding. That is, it might be desirable to compute a new description from a provided one and in that process to add a new constructor,
 \textit{e.g.}, adding a default ``error'' constructor to each datatype.
 This section presents a more informative encoding of constructors, and shows how it is possible to use that encoding when describing non-trivial datatypes.
 
@@ -364,7 +388,7 @@ represents a list of constructor names. Figure~\ref{fig:vectctors} show an examp
 \end{figure}
 
 Now that it is possible to represent the available constructors, we can encode a way of choosing a particular constructor tag. Figure~\ref{fig:ctortags} shows a datatype \tttype{Tag} with two constructors:
-\ttconstructor{TZ} which represents the constructor that is on top of the current list and \ttconstructor{TS} which represents a constructor further along the list. As such, \tttype{Tag} specifies is valid index into a (non-empty) list of constructor tags.
+\ttconstructor{TZ} which represents the constructor that is on top of the current list and \ttconstructor{TS} which represents a constructor further along the list. As such, \tttype{Tag} specifies a valid index into a (non-empty) list of constructor tags.
 
 This encoding has multiple advantages: it ensures that all constructor labels stored in our data exist in the expected list of constructors, it ensures that all datatypes which are dependent on a tag must have at least one constructor, and as a consequence
 it is possible to specify the empty type by simply requiring a tag on an empty list of expected constructors (since such value would be impossible to create).
@@ -400,7 +424,7 @@ is \ttconstructor{TS~TZ} since it is the second. Since there are only two elemen
 \subsection{A constructive type of choice}
 \label{sub:AConstructiveTypeofChoice}
 Similarly to how \texttt{\textbf{if}} was used to map \tttype{Bool} values to the descriptions of the various constructors of a datatype in Section~\ref{sub:ADescriptionforDatatypes}, it is desirable to have a way
-to map \tttype{Tag} values. While an initial proposal would be to use \texttt{\textbf{case of}} to do such mapping, it doesn't composes well with when the number of constructors are extended.
+to map \tttype{Tag} values. While an initial proposal would be to use \texttt{\textbf{case of}} to do such mapping, it doesn't compose well with extension of the count of constructors.
 This is because it requires that all possible cases are matched on, or at least the programmer must provide a suitable function to handle the rest of the cases (which is often an issue when doing generic programming).
 The following section will describe the \ttdec{switch} function that allows mapping \tttype{Tag} values while remaining extensible.
 
@@ -418,7 +442,7 @@ The operator $\pi$ is small in the sense that unlike the dependent function type
 \end{figure}
 
 Given a way to map a list of constructors to a list of values using $\pi$, it is now possible to define a function \ttdec{switch} which can look up the correct value for a particular \tttype{Tag}.
-The function \ttdec{switch} is shown in Figure~\ref{fig:switchctor} and has two branches: if the constructor to map is the first one in a list of constructors it simply returns the first value in the corresponding mapping, otherwise
+The function \ttdec{switch} is shown in Figure~\ref{fig:switchctor} and has two branches: if the constructor to map is the first one in a list of constructors, it simply returns the first value in the corresponding mapping, otherwise
 it continues the search using the rest of the provided elements (skipping the first constructor and its corresponding mapping).
 
 \begin{figure}[ht]
@@ -604,7 +628,7 @@ For each constructor, it matches the original definition presented Figure~\ref{f
 Perhaps, the key thing to notice is that a function \ttdec{switchDesc} was used instead of \ttdec{switch} when describing \tttype{Desc}.
 Figure~\ref{fig:switchdesc} shows how to \ttdec{switchDesc} is defined by specialising \ttdec{switch}. However, if \tttype{Desc} is a described type based on \ttdec{DescDesc} then such definition would be circular.
 This is because the general \ttdec{switch} requires the result type \tttype{Desc} to be given as argument, but \tttype{Desc} is dependent on \ttdec{DescDesc}. Therefore, \cite{Chapman:2010:GAL:1863543.1863547} define \ttdec{switchDesc} specially in their type theory, eliding the definition of the body
-and hard-wiring its return type to be \tttype{Desc}\footnote{Of course, such trick only works if there is know to be a type \tttype{Desc} in the meta-theory. However, the knowledge of its element is not necessarily required and it is possible to inspect that
+and hard-wiring its return type to be \tttype{Desc}\footnote{Of course, such trick only works if there is know to be a type \tttype{Desc} in the meta-theory. However, the knowledge of its elements is not necessarily required and it is possible to inspect these
 in a similar fashion to other datatypes.}. Now, \ttdec{DescDesc} can be type checked without any issues and \textit{levitation} is achieved.
 
 \begin{figure}[ht]
