@@ -175,8 +175,8 @@ In Figure~\ref{fig:anatomydatatype} there is no syntactic difference between a p
 Similarly to the type constructor, a data constructor needs a name, also called a \textit{tag}.
 Following the tag, the data constructor declaration contains the types of the arguments stored in the constructor and the resulting type which must use the type constructor of the datatype.
 In our example two constructors are declared, \ttconstructor{Nil} and \ttconstructor{Cons}.
-Constructor \ttconstructor{Nil} doesn't hold any data, so it only needs to define the resulting type which is \tttype{Vec}~\ttvar{a}~\ttconstructor{Z} (a vector with length 0).
-Constructor \ttconstructor{Cons} contains three different types of arguments: an ordinary implicit argument, an ordinary explicit argument, and an explicit argument of the type itself (recursive); the resulting type for \ttconstructor{Cons} is \tttype{Vec}~\ttvar{a}~\texttt{(}\ttconstructor{S}~\ttvar{n}\texttt{)}, that is, a vector of length 1+n where n is the length of the recursive argument.
+Constructor \ttconstructor{Nil} doesn't hold any data, so it only needs to define the resulting type which is \tttype{Vec}~\ttvar{a}~\ttconstructor{Z} (a vector with length \ttliteral{0}).
+Constructor \ttconstructor{Cons} contains three different types of arguments: an ordinary implicit argument, an ordinary explicit argument, and an explicit argument of the type itself (recursive); the resulting type for \ttconstructor{Cons} is \tttype{Vec}~\ttvar{a}~\texttt{(}\ttconstructor{S}~\ttvar{n}\texttt{)}, that is, a vector of length \ttliteral{1}\texttt{+}\ttvar{n} where \ttvar{n} is the length of the recursive argument.
 
 \begin{asideblock}
   The colouring scheme for code presented in this paper uses the following conventions:
@@ -211,9 +211,9 @@ The description datatype has three main constructors:
   \item  Constructor \ttconstructor{Rec} represents an recursive argument of the described datatype. The argument of constructor \ttconstructor{Rec} is the specification of the rest of the description.
 \end{itemize}
 
-In order to get an idea on how descriptions for various interesting datatypes look like, the following paragraphs will show a series of examples translating ordinary declarations to descriptions.
-The declaration of the trivial singleton type \tttype{Unit} is shown in Figure~\ref{fig:declunit}, and its corresponding description is shown in Figure~\ref{fig:descunit}. Since \tttype{Unit} doesn't hold
-any interesting arguments, \ttconstructor{Ret} is used to simply end the description.
+In order to get an idea on how descriptions for various interesting datatypes look like, the following paragraphs will show a series of examples providing a side-by-side comparison of ordinary declarations to descriptions.
+The declaration of the trivial singleton type \tttype{Unit} is shown in Figure~\ref{fig:declunit}, and its corresponding description is shown in Figure~\ref{fig:descunit}.
+Since the sole constructor \ttconstructor{MkUnit} doesn't contain any arguments, \ttconstructor{Ret} is used to simply end the description.
 
 \begin{figure}[ht]
 \begin{center}
@@ -230,7 +230,6 @@ any interesting arguments, \ttconstructor{Ret} is used to simply end the descrip
 
 A more interesting datatype is shown in Figure~\ref{fig:declpair}, namely the datatype \tttype{Pair} representing a pair of \tttype{Int} and \tttype{Bool}.
 The translation to the corresponding description, as shown in Figure~\ref{fig:descpair}, seems straightforward. For each argument of \ttconstructor{MkPair}, we use
-\ttconstructor{Arg} to specify its corresponding type and bind its value in a lambda expression so that it can be used by the rest of the description. In fact, for most arguments with the form \texttt{(}\ttvar{arg}~\texttt{:}~\ttvar{a}\texttt{)~->}~\ttvar{b} the corresponding description
 would be of the form \ttconstructor{Arg}~\ttvar{a}~\texttt{(\textbackslash}\ttvar{arg}~\texttt{=>}~\ttvar{b}\texttt{)}
 Finally, to specify the end of the description, \ttconstructor{Ret} is used.
 
@@ -250,7 +249,7 @@ Finally, to specify the end of the description, \ttconstructor{Ret} is used.
 A key aspect of algebraic datatypes is the ability to choose between multiple constructors.
 Figure~\ref{fig:decleither} shows a simple datatype \tttype{Either} which provides two constructors \ttconstructor{Right} and \ttconstructor{Left}, than can hold a value of \tttype{Int} and \tttype{String} respectively.
 
-Since there is no explicit way to encode a choice between multiple constructor, a boolean argument \ttvar{isRight} is used to determine which constructor is specified.
+Since there is no explicit way to encode a choice between multiple constructor in the provided description, instead, a boolean argument \ttvar{isRight} is used to determine which constructor is described.
 If the value of \ttvar{isRight} is true then the resulting description is expected to be for the \ttconstructor{Right} constructor, otherwise
 is is expected to be for the \ttconstructor{Left} constructor. The description for each constructor is then specified in a similar fashion to datatypes with one constructor such
 as \tttype{Pair} described above.
@@ -289,8 +288,8 @@ The only addition is that the description for \ttconstructor{Succ} now uses \ttc
 
 Figure~\ref{fig:decllist} shows one of the classical datatypes in functional programming languages, namely \tttype{List}.
 Unlike \tttype{Pair} and \tttype{Either} which were monomorphic in the presented examples, this time \tttype{List} is polymorphic in its elements.
-The way to represent parameters is by having them as arguments to the description value, which allows them to be qualified over the whole description.
-The description value itself is built using the previously described methods and is shown in Figure~\ref{fig:desclist}. There is a Boolean argument \ttvar{isNil}, which encodes the choice between the two constructors of the list,
+The way to represent parameters is by having them as arguments to the function describing the particular datatype, which allows them to be qualified over the whole description.
+The description itself is built using the previously described methods and is shown in Figure~\ref{fig:desclist}. There is a Boolean argument \ttvar{isNil}, which encodes the choice between the two constructors of the list,
 \ttconstructor{Nil} and \ttconstructor{Cons}. The description for \ttconstructor{Nil} is simply \ttconstructor{Ret} since it doesn't accept any arguments, and the description for \ttconstructor{Cons} takes an argument of the parameter type (the head of the list)
 a recursive argument (the tail of the list) and ends the description.
 
@@ -312,7 +311,7 @@ a recursive argument (the tail of the list) and ends the description.
 
 In order to allow datatypes to be indexed by values, the description structure takes a parameter that describes what the type of indices must be.
 Figure~\ref{fig:descriptiondatatype} shows an updated version of Figure~\ref{fig:simpldescdatatype}, that contains the necessary parameter \ttvar{ix} for indexing datatypes.
-The constructors \ttconstructor{Ret} and \ttconstructor{Rec}, must also be updated to take a value of \ttvar{ix} in order to represent what the index for the result type and recursive argument must be respectively.
+The constructors \ttconstructor{Ret} and \ttconstructor{Rec}, must also be updated to take a value of \ttvar{ix} in order to represent what the index of the result type and recursive argument must be respectively.
 For descriptions that don't require indices, they can be converted to indexed descriptions using the unit type \tttype{Unit} (or using its syntactic form \tttype{()}) as index.
 
 \begin{figure}[ht]
@@ -323,7 +322,8 @@ For descriptions that don't require indices, they can be converted to indexed de
 \label{fig:descriptiondatatype}
 \end{figure}
 
-In order to given an example on how an indexed datatype looks like, let us take a look at \tttype{Vec} from Figure~\ref{fig:anatomydatatype}. Figure~\ref{fig:descvec} shows the description of \tttype{Vec} with comparable annotations.
+In order to given an example on how an indexed datatype looks like, let us take a new look at \tttype{Vec} from Figure~\ref{fig:anatomydatatype}.
+Figure~\ref{fig:descvec} shows the corresponding description of \tttype{Vec} with comparable annotations.
 
 \begin{figure}[ht]
 \begin{center}
@@ -340,7 +340,7 @@ whereas the type of an index must be provided to the \tttype{Desc} type construc
 This is to ensure that all provided indices conform to same expected type, while still allowing the values to change inside the description.
 
 A Boolean argument \ttvar{isNil} is used to describe the choice between constructors \ttconstructor{Nil} and \ttconstructor{Cons}.
-The constructor \ttconstructor{Nil} doesn't contain any data so we simply use \ttconstructor{Ret~Z}, this indicates that the description is finished and the resulting type is expected to have index \ttconstructor{Z}, analogously to Figure~\ref{fig:anatomydatatype}.
+The constructor \ttconstructor{Nil} doesn't contain any data so we simply use \ttconstructor{Ret~Z}, which indicates that the description is finished and the resulting type is expected to have index \ttconstructor{Z}, analogously to Figure~\ref{fig:anatomydatatype}.
 The constructor \ttconstructor{Cons} takes first two ordinary arguments: a \tttype{Nat} argument
 to be used to describe the necessary indices, and an argument of the parameter \ttvar{a}. Following these arguments we take a recursive argument---specified using \ttconstructor{Rec}---that must satisfy to have the value of the input \tttype{Nat} argument \ttvar{n} as index, i.e. the argument must be of type \tttype{Vec}~\ttvar{a~n}. We finish the description with \ttconstructor{Ret} and specify that the resulting index must be \ttconstructor{S}~\ttvar{n} as expected.
 
@@ -352,11 +352,11 @@ To encode the choice of more than two constructors, a simple solution could be t
 However this encoding is fairly crude: it doesn't capture important information such as the names of constructors, requires a series of possibly complicated tests and is not easily extendible if one wants to extend descriptions
 with new constructors. In Section~\ref{sub:AnInformativeEncodingofConstructors}, I will present a more sophisticated encoding that doesn't suffer from these limitations.
 
-For more demanding datatypes that needs more than one type of index, the indices must be uncurried using dependent pairs.
+For more demanding datatypes that needs more than one index, the indices must be uncurried using dependent pairs.
 For example, a datatype with signature \texttt{(}\ttvar{n}~\texttt{:}~\tttype{Nat}\texttt{)~->~}\tttype{Fin}~\ttvar{n}~\texttt{->}~\tttype{Type} must use the dependent pair \tttype{(}\ttvar{n}~\texttt{:}~\tttype{Nat}~\tttype{**}~\tttype{Fin}~\ttvar{n}\tttype{)} as the type for its index.
 
 Finally, since parameters are usually qualified over the whole datatype (\textit{i.e.}, they do not change) it is possible to just accept them as external arguments when building
-a description. However, this can encoding can exclude interesting generic programs for being written such as the functorial map. In Chapter~\ref{cha:LevitatingIdris}, I will discuss a modification to the description datatype that permits encoding the types of
+a description. However, this encoding can exclude interesting generic programs for being written such as the functorial map. In Chapter~\ref{cha:LevitatingIdris}, I will discuss a modification to the description datatype that permits encoding the types of
 parameters directly.
 
 \subsection{An informative encoding of constructors}
@@ -404,7 +404,7 @@ are constructed manually.
 \end{figure}
 
 For the constructors of \tttype{Vec}, Figure~\ref{fig:vecctor} shows an example on what the tag values are. For \ttconstructor{Nil} the value is \ttconstructor{TZ} since it is the first in the list of \ttdec{VecCtors}, and for \ttconstructor{Cons} the value
-is \ttconstructor{TS~TZ} since it is the second. Since there are only two elements in \ttdec{VecCtors}, it shouldn't be possible to create any other valid constructor, and as such it is a good representative for enumerating the constructors of \tttype{Vec}.
+is \ttconstructor{TS~TZ} since it is the second. Since there are only two elements in \ttdec{VecCtors}, it shouldn't be possible to create any other valid constructor tag, and as such it is a good representative for enumerating the constructors of \tttype{Vec}.
 
 \begin{figure}[ht]
 \begin{center}
@@ -424,14 +424,12 @@ is \ttconstructor{TS~TZ} since it is the second. Since there are only two elemen
 \subsection{A constructive type of choice}
 \label{sub:AConstructiveTypeofChoice}
 Similarly to how \texttt{\textbf{if}} was used to map \tttype{Bool} values to the descriptions of the various constructors of a datatype in Section~\ref{sub:ADescriptionforDatatypes}, it is desirable to have a way
-to map \tttype{Tag} values. While an initial proposal would be to use \texttt{\textbf{case of}} to do such mapping, it doesn't compose well with extension of the count of constructors.
-This is because it requires that all possible cases are matched on, or at least the programmer must provide a suitable function to handle the rest of the cases (which is often an issue when doing generic programming).
-The following section will describe the \ttdec{switch} function that allows mapping \tttype{Tag} values while remaining extensible.
+to map \tttype{Tag} values.  The following section will describe the \ttdec{switch} function that allows mapping \tttype{Tag} values to suitable values of a desired type.
 
 Since the number of constructors for a datatype can vary in length, it is necessary to calculate a type that allows mapping the tag of each constructor to a suitable value (shown in Figure~\ref{fig:smallpiop}). 
-It essentially is a function that maps the list of constructors to a series of right-nested pairs such that there is one value for each constructor tag, and ends with \tttype{()}.
+It is essentially a function that provides a one-to-one mapping from the list of constructors to a series of right-nested pairs ending with \tttype{()}.
 The type of the resulting value \ttvar{prop} can be dependent on the input constructor tag, and therefore the function is called $\pi$ or the \textit{small pi operator}.
-The operator $\pi$ is small in the sense that unlike the dependent function type $\Pi$ which allows the result to dependent on any type of input, $\pi$ only allows a dependency on constructor tags.
+The operator $\pi$ is small in the sense that unlike the dependent function type $\Pi$ which allows the result to dependent on any type of input, $\pi$ only allows dependencies on constructor tags.
 
 \begin{figure}[ht]
 \begin{center}
@@ -441,9 +439,10 @@ The operator $\pi$ is small in the sense that unlike the dependent function type
 \label{fig:smallpiop}
 \end{figure}
 
-Given a way to map a list of constructors to a list of values using $\pi$, it is now possible to define a function \ttdec{switch} which can look up the correct value for a particular \tttype{Tag}.
+Given a way to map a list of constructors to a list of values using $\pi$, it is now possible to define \ttdec{switch} which can look up the corresponding result value in the map for a particular \tttype{Tag}.
 The function \ttdec{switch} is shown in Figure~\ref{fig:switchctor} and has two branches: if the constructor to map is the first one in a list of constructors, it simply returns the first value in the corresponding mapping, otherwise
 it continues the search using the rest of the provided elements (skipping the first constructor and its corresponding mapping).
+Since there can be no value of \tttype{Tag} on an empty enumeration of constructors, it is not required to handle such case as the elaborator would automatically find out that such case is impossible.
 
 \begin{figure}[ht]
 \begin{center}
@@ -489,9 +488,9 @@ This provides a simple yet powerful way to constrain values in order to ensure t
 It is finally time to convert the description to an actual type. Figure~\ref{fig:synthdata} shows the \ttdec{Synthesise} method which takes a description, the final form of that datatype and the resulting index, then it returns a type which can contain the described data.
 
 \begin{itemize}
-  \item If we reach the end of the description, i.e. \ttconstructor{Ret}, the only thing that we need to ensure is that the provided resulting index matches the expected index provided in the description. In order to apply such constraint we use the heterogeneous equality type (see Section~\ref{sub:AHeterogeneousFormofEquality}).
-  \item For recursive arguments, i.e. \ttconstructor{Rec}, we construct a dependent pair where the first argument contains a value of the fully-synthesised type with the given index and the second argument contains the synthesised version of the rest of the provided description. The reason that we need the final form of the datatype in order to construct a recursive argument is due to the fact that if we call \ttdec{Synthesise} recursively on that argument we would get stuck in an infinite loop!
-  \item For ordinary arguments, i.e. \ttconstructor{Arg}, we also create a dependent pair. The first argument of the dependent pair is a value \ttvar{arg} of the provided type \ttvar{a}, and the second argument is the synthesis of the rest of the provided description \ttvar{d} given \ttvar{arg}. This is isomorphic to how an ordinary constructor would store the data and as such the dependent pair serves a good target structure for our synthesis.
+  \item If we reach the end of the description \textit{i.e.}, \ttconstructor{Ret}, the only thing that we need to ensure is that the provided resulting index matches the expected index provided in the description. In order to apply such constraint we use the heterogeneous equality type (see Section~\ref{sub:AHeterogeneousFormofEquality}).
+  \item For recursive arguments \textit{i.e.}, \ttconstructor{Rec}, we construct a dependent pair where the first argument contains a value of the fully-synthesised type with the given index and the second argument contains the synthesised version of the rest of the provided description. The reason that we need the final form of the datatype in order to construct a recursive argument is due to the fact that if we call \ttdec{Synthesise} recursively on that argument we would get stuck in an infinite loop!
+  \item For ordinary arguments \textit{i.e.}, \ttconstructor{Arg}, we also create a dependent pair. The first argument of the dependent pair is a value \ttvar{arg} of the provided type \ttvar{a}, and the second argument is the synthesis of the rest of the provided description \ttvar{d} given \ttvar{arg}. This is isomorphic to how an ordinary constructor would store the data and as such the dependent pair serves a good target structure for our synthesis.
 \end{itemize}
 Since the dependent pair is used as the target type for the synthesis, it itself must be a core part of the type theory similarly to the heterogeneous equality, if we want to treat all datatype declarations as describable.
 
@@ -531,12 +530,12 @@ and additionally the expected value of the result index (\textit{i.e.}, \ttvar{n
 \label{fig:synthversvecdesc}
 \end{figure}
 
-A simple example representing the vector \ttliteral{[1, 2, 3]} is presented in Figure~\ref{fig:exmvecsynthvecdesc}. Although the value might seem a bit overwhelming at first, it follows a simple pattern:
-Each time a value of \ttdec{Vec} is needed \ttconstructor{Con} is used, then it is followed by its required arguments in the form of nested dependent pairs, and finally it ends with \tttype{Refl} which ensures
+A simple example representing the vector \ttconstructor{[}\ttliteral{1}~\ttconstructor{,}~\ttliteral{2}~\ttconstructor{,}~\ttliteral{3}\ttconstructor{]} is presented in Figure~\ref{fig:exmvecsynthvecdesc}. Although the value might seem a bit overwhelming at first, it follows a simple pattern:
+Each time a value of \ttdec{Vec} is needed \ttconstructor{Con} is used, then it is followed by its required arguments in the form of nested dependent pairs, and finally it ends with \ttconstructor{Refl} which ensures
 that the provided index of the value match up with the expected one.
 As such, it can be observed that there are 4 occurences of \ttconstructor{Con} and \ttconstructor{Refl} in the example, three for the various applications
 of \ttconstructor{Cons} and one for the application of \ttconstructor{Nil}. For all cases the first two arguments represent the constructor label and associated tag. 
-For \ttconstructor{Cons} the first following argument is the length of the rest of the vector (the value of index \ttvar{n}) followed by the value of the list head and the list tail, ending with \tttype{Refl}.
+For \ttconstructor{Cons} the first following argument is the length of the rest of the vector (the value of index \ttvar{n}) followed by the value of the list head and the list tail, ending with \ttconstructor{Refl}.
 For \ttconstructor{Nil} the value is ended with \ttconstructor{Refl} since it doesn't contain any data.
 
 
@@ -544,7 +543,7 @@ For \ttconstructor{Nil} the value is ended with \ttconstructor{Refl} since it do
 \begin{center}
     \includegraphics[scale=0.5]{Figures/VectorSynthesisedExample.png}
 \end{center}
-\caption{Example Vector representing ``[1,2,3]`` as a Value of a Synthesised Description}
+\caption{Example Vector representing \ttconstructor{[}\ttliteral{1}~\ttconstructor{,}~\ttliteral{2}~\ttconstructor{,}~\ttliteral{3}\ttconstructor{]} as a Value of a Synthesised Description}
 \label{fig:exmvecsynthvecdesc}
 \end{figure}
 
@@ -573,7 +572,7 @@ and it looks almost exactly like the original value it needed to describe \ttlit
 \begin{center}
     \includegraphics[scale=0.5]{Figures/VectorSynthesisedConstructorsExample.png}
 \end{center}
-\caption{More Readable Version of ``[1,2,3]`` using previously-defined Aliases}
+\caption{More Readable Version of \ttconstructor{[}\ttliteral{1}~\ttconstructor{,}~\ttliteral{2}~\ttconstructor{,}~\ttliteral{3}\ttconstructor{]}  using previously-defined Aliases}
 \label{fig:exmvecsynthvecdescconstrs}
 \end{figure}
 
@@ -626,8 +625,8 @@ For each constructor, it matches the original definition presented Figure~\ref{f
 \end{figure}
 
 Perhaps, the key thing to notice is that a function \ttdec{switchDesc} was used instead of \ttdec{switch} when describing \tttype{Desc}.
-Figure~\ref{fig:switchdesc} shows how to \ttdec{switchDesc} is defined by specialising \ttdec{switch}. However, if \tttype{Desc} is a described type based on \ttdec{DescDesc} then such definition would be circular.
-This is because the general \ttdec{switch} requires the result type \tttype{Desc} to be given as argument, but \tttype{Desc} is dependent on \ttdec{DescDesc}. Therefore, \cite{Chapman:2010:GAL:1863543.1863547} define \ttdec{switchDesc} specially in their type theory, eliding the definition of the body
+Figure~\ref{fig:switchdesc} shows how \ttdec{switchDesc} is defined by specialising \ttdec{switch}. However, if \tttype{Desc} is a described type based on \ttdec{DescDesc} then such definition would be circular.
+This is because the general \ttdec{switch} requires the result type \tttype{Desc} to be given as argument, but \tttype{Desc} is dependent on \ttdec{DescDesc}. Therefore, \cite{Chapman:2010:GAL:1863543.1863547} define \ttdec{switchDesc} to be handled specially in their type theory, eliding the definition of the body
 and hard-wiring its return type to be \tttype{Desc}\footnote{Of course, such trick only works if there is know to be a type \tttype{Desc} in the meta-theory. However, the knowledge of its elements is not necessarily required and it is possible to inspect these
 in a similar fashion to other datatypes.}. Now, \ttdec{DescDesc} can be type checked without any issues and \textit{levitation} is achieved.
 
