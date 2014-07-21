@@ -33,8 +33,8 @@ SPi (l :: e)  prop =
   (prop l TZ, SPi e (\l',t => prop l' (TS t)))
 
 switch : (e : CEnum)
-   -> (prop : (l : CLabel) -> (t : Tag l e) -> Type)
-   -> SPi e prop
+  -> (prop : (l : CLabel) -> (t : Tag l e) -> Type)
+  -> SPi e prop
   -> ((l' : CLabel) -> (t' : Tag l' e) -> prop l' t')
 switch (l' :: e) prop ((propz, props)) l' TZ      = propz
 switch (l  :: e) prop ((propz, props)) l' (TS t') =
@@ -99,3 +99,18 @@ DescDesc ix =
                   (Arg ix (\i => Ret ()),
                   (Arg ix (\i => Arg Type (\a => Rec () (Ret ()))),
       ())))) l))
+
+  
+%logging 5
+square : Int -> Int
+square x = x * x
+
+power : Int -> [static] Int -> Int
+power x n = if (n `mod` 2) == 0
+            then square (power x (n `div` 2))
+            else x * power x (n - 1)
+
+
+main : Int -> Int
+main x = Code.power x 5
+%logging 0
