@@ -32,5 +32,6 @@
 *.tdo
 *.swp
 *.ibc
+*.thm
 report-blx.bib
 report.run.xml

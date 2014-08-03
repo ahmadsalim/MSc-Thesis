@@ -1,5 +1,8 @@
 module Code
 
+%default total
+
+{-
 data Desc : (ix : Type) -> Type where
   Ret  : ix -> Desc ix
   Arg  : (a : Type) -> (a -> Desc ix) -> Desc ix
@@ -98,19 +101,19 @@ DescDesc ix =
                   (Arg Type (\a => HRec () a (Ret ())),
                   (Arg ix (\i => Ret ()),
                   (Arg ix (\i => Arg Type (\a => Rec () (Ret ()))),
-      ())))) l))
+      ())))) l)) -}
 
   
-%logging 5
 square : Int -> Int
 square x = x * x
 
 power : Int -> [static] Int -> Int
-power x n = if (n `mod` 2) == 0
-            then square (power x (n `div` 2))
-            else x * power x (n - 1)
+power x n = if n == 0
+            then 1
+            else if (n `mod` 2) == 0
+                 then square (power x (n `div` 2))
+                 else x * power x (n - 1)
 
 
 main : Int -> Int
 main x = Code.power x 5
-%logging 0

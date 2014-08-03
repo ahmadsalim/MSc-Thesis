@@ -3,10 +3,14 @@
 \usepackage[]{float} 
 \usepackage[]{csquotes} 
 \usepackage[]{graphicx} 
-\usepackage[]{caption} 
+\usepackage[font={scriptsize}]{caption} 
 \usepackage[]{subcaption} 
 \usepackage[]{mdframed}
-\usepackage[]{amsthm} 
+\usepackage[]{ntheorem} 
+\usepackage[]{fixltx2e} 
+\usepackage[]{mathpartir} 
+\usepackage[]{syntax} 
+\usepackage[utf8]{inputenc} 
 \usepackage[backend=bibtex, style=authoryear]{biblatex}
 \bibliography{report.bib}
 
@@ -22,7 +26,7 @@
 \newcommand{\ttvar}[1]{\textcolor{local-var-color}{\texttt{#1}}}
 \newcommand{\ttliteral}[1]{\textcolor{literal-color}{\texttt{#1}}}
 
-\theoremstyle{definition}
+\theoremstyle{break}
 \newtheorem{exmp}{Example}
 
 \newenvironment{asideblock}
@@ -73,8 +77,9 @@ when the work is complete.}
 \section{Context}
 \label{sec:Context}
 Algebraic datatypes such as Boolean values, lists or trees form a core part of modern functional programming.
-Most functions written work directly on such datatypes, but sometimes it is the case that there are functions that don't directly dependent on the datatype itself and only are there to serve as a repetitive exercise; For example, in cases as structural equality or pretty printing (see Example~\ref{exmp:prettyprint}).
-In fact it is possible to write an algorithm over the structural definition of the datatype, which the computer then could use to derive an actual function for particular datatypes.
+Most functions written work directly on such datatypes, but some functions like structural equality or pretty printing (see Example~\ref{exmp:prettyprint}) don't directly dependent on the datatype itself.
+Therefore, writing such functions for each different datatype becomes a repetitive exercise.
+In fact it is possible to write an algorithm over the structural definition of the datatype, which the computer then could use to derive an actual function for each particular datatypes.
 
 \begin{exmp}
   Pretty printing an element of any algebraic data type follows a very simple procedure:
@@ -93,8 +98,8 @@ In fact it is possible to write an algorithm over the structural definition of t
   \label{exmp:prettyprint}
 \end{exmp}
 
-Enter the world of \textit{generic programming} where the target datatype is the one describing the structure of other datatypes, often called the \textit{description}.
-While generic programming sounds promising, it is usually seen as a challenging aspect of Haskell\,\autocite{haskell98} to use by ordinary programmers. To represent the description, it is often required to use special language extensions\,\autocite{magalhaes2010generic} and the programming style tends to require different abstractions than when writing ordinary programs.
+Enter the world of \textit{generic programming} where the target datatype is the one describing the structure of other datatypes, often called the \textit{description}\label{kw:desc}.
+While generic programming sounds promising, it is usually seen as an aspect of Haskell\,\autocite{haskell98} that is challenging to use by ordinary programmers. To represent the description, it is often required to use special language extensions\,\autocite{magalhaes2010generic,Jansson:1997:PPP:263699.263763} and the programming style tends to require different abstractions than when writing ordinary programs.
 
 %A tiny bit of history here?
 However, in dependently-typed languages such as Idris\,\autocite{brady2013idris} or Agda\,\autocite{norell2009dependently} it is possible to create a correct description using ordinary datatype definitions\,\autocite{benke2003universes}.
@@ -111,11 +116,11 @@ In such system, generic programming is just a special case of ordinary programmi
 The current work on generic programming in dependently-typed languages presents both elegant and typesafe ways to represent the structural descriptions of datatypes.
 Furthermore, it allows the programmer to save both time and boilerplate code while reducing mistakes by using ordinary programming techniques to do generic programming.
 
-However, the state of the art is heavily theoretically oriented, which might lead to issues when a system needs to be developed with a practical audience in mind.
+However, the state of the art is heavily theoretically oriented, which might lead to some challenges when a system needs to be developed with a practical audience in mind.
 First of all, multiple description formats are often presented, sometimes even in the same paper, which might not be particularly attractive in a practical setting.
 Secondly, there has been little work done on how to integrate such descriptions in languages which contain features such as type classes and proof scripts.
 Finally, datatypes synthesised from descriptions create large canonical terms; thus, both type checking and runtime performance are very slow.
-In the end, if an efficient and easily usable framework for programming with described types that avoids the described issues could be implemented successfully, it would save programmers both the time and effort required to write repetitive functions.
+In the end, if an efficient and easily usable framework for programming with described types could be implemented successfully, it would save programmers both the time and effort required to write repetitive functions.
 
 \section{Aim and scope}
 \label{sec:AimandScope}
@@ -123,12 +128,12 @@ The aim of this research is to provide a practical and efficient implementation 
 This project has three primary goals.
 
 The first goal is to find a good definition of the description that supports many common datatypes.
-I seek to mainly reuse some of the existing work, and not try to improve underlying type theory to support more complex inductive families; neither will I focus on supporting all language features of Idris such as implicit arguments and codata definitions.
+I mainly seek to reuse some of the existing work, and not to further develop underlying type theory to support more complex inductive families; neither will I focus on supporting all language features of Idris such as implicit arguments and codata definitions.
 
 The second goal is to present realistic examples using generic functions working on described types. 
 This mainly includes implementing functions that can be used to derive type class instances, and a Scrap Your Boilerplate-style (SYB) library for generic querying and traversal.
 
-The final goal is that I seek to describe how partial evaluation and related techniques can be used to optimise the generic functions with regards to specific descriptions in order to achieve acceptable performance.
+The final goal is to describe how partial evaluation and related techniques can be used to optimise the generic functions with regards to specific descriptions in order to achieve acceptable performance.
 This includes using techniques such as polyvariant partial evaluation\,\autocite{Jones:1993:PEA:153676} and constructor specialisation\,\autocite{Mogensen:1993:CS:154630.154633}. %Elaborate when I know more about PE\ldots
 
 \section{Significance}
@@ -156,6 +161,7 @@ Finally, Chapter~\ref{cha:Discussion} discusses the challenges that still lie ah
 \subsection{Anatomy of a datatype}
 \label{sub:AnatomyofaDatatype}
 To build an intuition that will be useful in understanding descriptions, let us first start by looking closely at how datatypes are structured.
+Recall from Page~\pageref{kw:desc} that a description is a data value representing the structure of a particular datatype.
 Figure~\ref{fig:anatomydatatype} presents an annotated version of a typical dependently-typed datatype representing vectors.
 
 \begin{figure}[ht]
@@ -173,7 +179,7 @@ In Figure~\ref{fig:anatomydatatype} there is no syntactic difference between a p
 unlike other dependently-typed languages like Agda which have a syntactic distinction.
 
 Similarly to the type constructor, a data constructor needs a name, also called a \textit{tag}.
-Following the tag, the data constructor declaration contains the types of the arguments stored in the constructor and the resulting type which must use the type constructor of the datatype.
+Following the tag, the data constructor declaration contains the types of the arguments stored in the constructor and the resulting type that must use the type constructor of the datatype.
 In our example two constructors are declared, \ttconstructor{Nil} and \ttconstructor{Cons}.
 The constructor \ttconstructor{Nil} doesn't hold any data, so it only needs to define the resulting type which is \tttype{Vec}~\ttvar{a}~\ttconstructor{Z} (a vector with length \ttliteral{0}).
 The constructor \ttconstructor{Cons} contains three different types of arguments: an ordinary implicit argument, an ordinary explicit argument, and an explicit argument of the type itself (recursive); the resulting type for \ttconstructor{Cons} is \tttype{Vec}~\ttvar{a}~\texttt{(}\ttconstructor{S}~\ttvar{n}\texttt{)}, that is, a vector of length \ttliteral{1}\texttt{+}\ttvar{n} where \ttvar{n} is the length of the recursive argument.
@@ -207,14 +213,14 @@ Similarly based on that work, Section~\ref{sec:SynthesisingDescriptionstoTypes} 
 \label{fig:simpldescdatatype}
 \end{figure}
 
-The description datatype has three main constructors:
+The description datatype \tttype{Desc} has three main constructors:
 \begin{itemize}
   \item  Constructor \ttconstructor{Ret} represents the end of a description
   \item  Constructor \ttconstructor{Arg} represents the addition of an argument of any type to a given description; the first argument of \ttconstructor{Arg} is the type of argument expected and the second argument is the rest of the description dependent on a value of that type.
-  \item  Constructor \ttconstructor{Rec} represents an recursive argument of the described datatype. The argument of constructor \ttconstructor{Rec} is the specification of the rest of the description.
+  \item  Constructor \ttconstructor{Rec} represents a recursive argument of the described datatype. The argument of constructor \ttconstructor{Rec} is the specification of the rest of the description.
 \end{itemize}
 
-In order to get an idea on how descriptions for various interesting datatypes look like, the following paragraphs will show a series of examples providing a side-by-side comparison of ordinary declarations to descriptions.
+To get an idea on how descriptions for various interesting datatypes look like, the following paragraphs will show a series of examples providing a side-by-side comparison of ordinary declarations to descriptions.
 The declaration of the trivial singleton type \tttype{Unit} is shown in Figure~\ref{fig:declunit}, and its corresponding description is shown in Figure~\ref{fig:descunit}.
 Since the sole constructor \ttconstructor{MkUnit} doesn't contain any arguments, \ttconstructor{Ret} is used to simply end the description.
 
@@ -233,8 +239,8 @@ Since the sole constructor \ttconstructor{MkUnit} doesn't contain any arguments,
 
 \paragraph{Constructor arguments}
 A more interesting datatype is shown in Figure~\ref{fig:declpair}, namely the datatype \tttype{Pair} representing a pair of \tttype{Int} and \tttype{Bool}.
-The translation to the corresponding description, as shown in Figure~\ref{fig:descpair}, seems straightforward. For each argument of \ttconstructor{MkPair}, we use
-would be of the form \ttconstructor{Arg}~\ttvar{a}~\texttt{(\textbackslash}\ttvar{arg}~\texttt{=>}~\ttvar{b}\texttt{)}
+The translation to the corresponding description, as shown in Figure~\ref{fig:descpair}, seems straightforward. 
+For each argument of \ttconstructor{MkPair} that is used \texttt{(}\ttvar{arg}~\texttt{:}~\ttvar{a}\texttt{)~->}~\ttvar{b}, the translation would be of the form \ttconstructor{Arg}~\ttvar{a}~\texttt{(\textbackslash}\ttvar{arg}~\texttt{=>}~\ttvar{b}\texttt{)}.
 Finally, to specify the end of the description, \ttconstructor{Ret} is used.
 
 \begin{figure}[ht]
@@ -254,10 +260,10 @@ A key aspect of algebraic datatypes is the ability to choose between multiple co
 Figure~\ref{fig:decleither} shows a simple datatype \tttype{Either} which provides two constructors \ttconstructor{Right} and \ttconstructor{Left}, than can hold a value of \tttype{Int} and \tttype{String} respectively.
 
 \paragraph{Choice of constructors}
-Since there is no explicit way to encode a choice between multiple constructor in the provided description, instead, a boolean argument \ttvar{isRight} is used as a tag to determine which constructor is described.
+Since there is no explicit way to encode a choice between multiple constructor in the provided description, instead a boolean argument \ttvar{isRight} is used as a tag to determine which constructor is described.
 If the value of \ttvar{isRight} is true then the resulting description is expected to be for the \ttconstructor{Right} constructor, otherwise
-is is expected to be for the \ttconstructor{Left} constructor. The description for each constructor is then specified in a similar fashion to datatypes with one constructor such
-as \tttype{Pair} described above.
+is is expected to be for the \ttconstructor{Left} constructor.
+The description for each constructor is then specified in a similar fashion to datatypes with one constructor, such as \tttype{Pair} described above.
 
 \begin{figure}[ht]
 \begin{center}
@@ -276,7 +282,7 @@ as \tttype{Pair} described above.
 In addition to allowing the choice between multiple possible constructors, what makes algebraic datatypes interesting is the ability to
 have recursive (or \textit{inductive}) instances. The simplest recursive datatype is the natural numbers \tttype{Nat} (shown in Figure~\ref{fig:declnat}) which has two constructors,
 \ttconstructor{Zero} which represents \ttliteral{0} and the recursively defined \ttconstructor{Succ} which represents \ttliteral{1}+\ttvar{n} for any natural number \ttvar{n}.
-The corresponding description is shown in Figure~\ref{fig:declnat} which is mainly built up using the principles introduced before.
+The corresponding description is shown in Figure~\ref{fig:descnat} which is mainly built up using the principles introduced before.
 The only addition is that the description for \ttconstructor{Succ} now uses \ttconstructor{Rec} to specify that it requires a recursive argument (to type \tttype{Nat} itself).
 
 \begin{figure}[ht]
@@ -294,7 +300,7 @@ The only addition is that the description for \ttconstructor{Succ} now uses \ttc
 
 \paragraph{Parameters}
 Figure~\ref{fig:decllist} shows one of the classical datatypes in functional programming languages, namely \tttype{List}.
-Unlike \tttype{Pair} and \tttype{Either} which were monomorphic in the presented examples, this time \tttype{List} is polymorphic in its elements.
+Unlike \tttype{Pair} and \tttype{Either} which were monomorphic in the presented examples, \tttype{List} is polymorphic in its elements.
 The way to represent parameters is by having them as arguments to the function describing the particular datatype, which allows them to be qualified over the whole description.
 The description itself is built using the previously described methods and is shown in Figure~\ref{fig:desclist}. There is a Boolean argument \ttvar{isNil}, which encodes the choice between the two constructors of the list,
 \ttconstructor{Nil} and \ttconstructor{Cons}.
@@ -314,13 +320,17 @@ The description for \ttconstructor{Cons} takes an argument of the parameter type
 \end{center}
 \end{figure}
 
+The reader may have noticed that the datatypes presented so far are perfectly expressible in ordinary functional languages like Haskell or Standard ML\,\autocite{Milner:1997:DSM:549659}.
+To really exploit the power of dependently-typed programming languages, it should be possible to express datatypes that may be indexed by values.
+This will be discussed in Section~\ref{sub:Indexingdescriptions}.
+
 \subsection{Indexing descriptions}
 \label{sub:Indexingdescriptions}
 
-In order to allow datatypes to be indexed by values, the description structure takes a parameter that describes what the type of indices must be.
+To allow datatypes to be indexed by values, the description structure takes a parameter that describes what the type of indices must be.
 Figure~\ref{fig:descriptiondatatype} shows an updated version of Figure~\ref{fig:simpldescdatatype}, that contains the necessary parameter \ttvar{ix} for indexing datatypes.
 The constructors \ttconstructor{Ret} and \ttconstructor{Rec}, must also be updated to take a value of \ttvar{ix} in order to represent what the index of the result type and recursive argument must be respectively.
-Descriptions that don't require indices, they can be converted to indexed descriptions by using the unit type \tttype{Unit} (or using its syntactic form \tttype{()}) as index.
+Descriptions that don't require indices can be converted to indexed descriptions by using the unit type \tttype{Unit} (or its syntactic form \tttype{()}) as index.
 
 \begin{figure}[ht]
 \begin{center}
@@ -330,7 +340,7 @@ Descriptions that don't require indices, they can be converted to indexed descri
 \label{fig:descriptiondatatype}
 \end{figure}
 
-In order to given an example on how an indexed datatype looks like, let us take a new look at \tttype{Vec} from Figure~\ref{fig:anatomydatatype}.
+To give an example on how an indexed datatype looks like, let us take a new look at \tttype{Vec} from Figure~\ref{fig:anatomydatatype}.
 Figure~\ref{fig:descvec} shows the corresponding description of \tttype{Vec} with comparable annotations.
 
 \begin{figure}[ht]
@@ -345,33 +355,40 @@ Figure~\ref{fig:descvec} shows the corresponding description of \tttype{Vec} wit
 The type signature for the description of \tttype{Vec} mimics the one for the actual datatype closely, but there are nonetheless some differences.
 There is now an explicit distinction between parameters and indices; the type for a parameter can still be specified as an argument for the description value,
 whereas the type of an index must be provided to the \tttype{Desc} type constructor.
-This is to ensure that all provided indices conform to same expected type, while still allowing the values to change inside the description.
+This is to ensure that all provided indices conform to the same expected type, while still allowing the values to change inside the description.
 
 A Boolean argument \ttvar{isNil} is used to describe the choice between constructors \ttconstructor{Nil} and \ttconstructor{Cons}.
 The constructor \ttconstructor{Nil} doesn't contain any data so we simply use \ttconstructor{Ret~Z}, which indicates that the description is finished and the resulting type is expected to have index \ttconstructor{Z}, analogously to Figure~\ref{fig:anatomydatatype}.
 The constructor \ttconstructor{Cons} takes first two ordinary arguments: a \tttype{Nat} representing the length of the tail, i.e. the index of the recursive argument, and an argument of the parameter type \ttvar{a} representing the head.
-Following these arguments we take a recursive argument representing the tail---specified using \ttconstructor{Rec}---that must satisfy to have the value of the input \tttype{Nat} argument \ttvar{n} as index, i.e. the argument must be of type \tttype{Vec}~\ttvar{a~n}.
+Following these arguments we take a recursive argument representing the tail---specified using \ttconstructor{Rec}---that must have the value of the input \tttype{Nat} argument \ttvar{n} as index, i.e. the argument must be of type \tttype{Vec}~\ttvar{a~n}.
 We finish the description with \ttconstructor{Ret} and specify that the resulting index must be \ttconstructor{S}~\ttvar{n}, just as in Figure~\ref{fig:anatomydatatype}.
 
 \subsubsection{Challenges and limitations}
 Even though it was possible to describe a variety of datatypes there are still a few questions that can be raised, such as: How is it possible to choose between more than two constructors? Why is there only one type for indices?
-Why aren't the type of parameters required to be encoded inside the description datatype itself? I seek to answer these questions in the following paragraphs.
+Why aren't the type of parameters required to be encoded inside the description datatype itself? How is it possible to represent more complex datatypes such as mutual recursive ones? I seek to answer these questions in the following paragraphs.
 
 To encode the choice of more than two constructors, a simple solution could be to nest multiple Boolean values acting as a form of binary enumeration of tags.
-However this encoding is fairly crude: it doesn't capture important information such as the names of constructors, requires a series of possibly complicated tests and is not easily extendible if one wants to extend descriptions
+However this encoding is fairly crude: it does not capture important information such as the names of constructors, requires a series of possibly complicated tests and is not easily extendible if one wants to extend descriptions
 with new constructors. In Section~\ref{sub:AnInformativeEncodingofConstructors}, I will present a more sophisticated encoding that doesn't suffer from these limitations.
 
-For more demanding datatypes that needs more than one index, the indices must be uncurried using dependent pairs.
+For more demanding datatypes that need more than one index, the indices must be uncurried using dependent pairs.
 For example, a datatype with signature \texttt{(}\ttvar{n}~\texttt{:}~\tttype{Nat}\texttt{)~->~}\tttype{Fin}~\ttvar{n}~\texttt{->}~\tttype{Type} must use the dependent pair \tttype{(}\ttvar{n}~\texttt{:}~\tttype{Nat}~\tttype{**}~\tttype{Fin}~\ttvar{n}\tttype{)} as the type of its index.
 
-Finally, since parameters are usually quantified over the whole datatype (\textit{i.e.}, they do not change) it is possible to just accept them as external arguments when building
-a description. However, this encoding can exclude interesting generic programs for being written, such as the functorial map. In Chapter~\ref{cha:LevitatingIdris}, I will discuss a modification to the description datatype that permits encoding the types of
+Since parameters are usually quantified over the whole datatype (\textit{i.e.}, they do not change) it is possible to just accept them as external arguments when building
+a description.
+However, this encoding can preclude interesting generic programs from being written, such as the functorial map. In Chapter~\ref{cha:LevitatingIdris}, I will discuss a modification to the description datatype that permits encoding the types of
 parameters directly.
+
+Finally, there is the question on how more complicated datatypes are to be represented.
+Datatypes that require recursive functions as arguments like \tttype{Desc}, can not currently be represented in the presented encoding and the description must be extended to be able to describe types as itself (see Section~\ref{sec:TheMostlyGentleArtofLevitation}).
+Mutual recursive datatypes cannot be represented directly, but it is possible to use indices to represent an isomorphic representation.
+For example, for two mutually recursive datatypes one could use a boolean argument as index which determines the actual datatype is currently described.
+Unfortunately, a challenge that still persists is that the most complex inductive families---such as inductive-inductive and inductive-recursive definitions---can not be represented using the presented descriptions.
 
 \subsection{An informative encoding of constructors}
 \label{sub:AnInformativeEncodingofConstructors}
 In Section~\ref{sub:ADescriptionforDatatypes} a Boolean variable was used to determine the choice between two constructors, and concluded that his approach had multiple disadvantages.
-First of all, the Boolean encoding doesn't capture the names of the respective constructors which might be important when it is desired to pretty print or serialise a data structure.
+First of all, the Boolean encoding does not capture the names of the respective constructors which might be important when it is desired to pretty print or serialise a data structure.
 Secondly, when there are more than two constructors, it can quickly become complicated to provide a suitable description.
 Multiple Boolean arguments are required and mapping these Boolean values to description is not exactly straightforward.
 For example, should two Boolean values encode the choice between 3 or 4 constructors?
@@ -474,7 +491,7 @@ As an example, Figure~\ref{fig:vecdescim} shows the description of \tttype{Vec} 
 
 In summary, while the description might initially seem more complicated than before, it has a couple of clear advantages: the encoding now contain the constructor tag and it is possible to choose between more than two constructors at the same time.
 
-\section{Synthesising descriptions to types}
+\section{Synthesising types from descriptions}
 \label{sec:SynthesisingDescriptionstoTypes}
 In Section~\ref{sec:TheGenericStructureofInductiveDataTypes} I had shown how it was possible to create descriptions that support many common datatypes in Idris.
 In this section I will present a way to convert or \textit{synthesise} these descriptions to actual types, that allows the programmer to construct values of these described types with actual data.
@@ -498,10 +515,10 @@ Since the dependent pair is used as the target type for the synthesis, it itself
 \label{fig:synthdata}
 \end{figure}
 
-We are able to synthesise our descriptions to actual types using \ttdec{Synthesise}.
-However, an issue occurs when we want to use \ttdec{Synthesise} since it requires the final form of the described datatype as input but the only way to synthesise the datatype is using \ttdec{Synthesise} itself.
-In order to ``tie the knot'' and complete input for \ttdec{Synthesise}, we define a final datatype \tttype{Data} that takes a description and provides the final form of the described datatype (see Figure~\ref{fig:datafromdesc}).
-\tttype{Data} has only one constructor namely \ttconstructor{Con} which takes as input the synthesised version of the description \ttvar{d} with \tttype{Data}~\ttvar{d} serving as argument for the final form of the datatype in \ttdec{Synthesise}. This works since each time we face a recursive argument it must be constructed using \ttconstructor{Con} which avoids a infinite loop in \ttdec{Synthesise} as long as the elements that are constructed are smaller in size.
+We are able to actual types using \ttdec{Synthesise} from the provided descriptions.
+However, a problem occurs when we want to use \ttdec{Synthesise} since it requires the final form of the described datatype as input but the only way to synthesise the datatype is using \ttdec{Synthesise} itself.
+In order to ``tie the knot'' and complete input for \ttdec{Synthesise}, we define a datatype \tttype{Data} that takes a description and provides the final form of the described datatype (see Figure~\ref{fig:datafromdesc}).
+\tttype{Data} has only one constructor namely \ttconstructor{Con} which takes as input the synthesised version of the description \ttvar{d} with \tttype{Data}~\ttvar{d} serving as argument for the final form of the datatype in \ttdec{Synthesise}. This works since each time we face a recursive argument it must be constructed using \ttconstructor{Con} which avoids an infinite loop in \ttdec{Synthesise} as long as the elements that are constructed are smaller in size.
 
 \begin{figure}[ht]
 \begin{center}
@@ -530,7 +547,7 @@ and additionally the expected value of the result index (\textit{i.e.}, \ttvar{n
 A simple example representing the vector \ttconstructor{[}\ttliteral{1}~\ttconstructor{,}~\ttliteral{2}~\ttconstructor{,}~\ttliteral{3}\ttconstructor{]} is presented in Figure~\ref{fig:exmvecsynthvecdesc}. Although the value might seem a bit overwhelming at first, it follows a simple pattern:
 each time a value of \ttdec{Vec} is needed \ttconstructor{Con} is used, followed by its required arguments in the form of nested dependent pairs, and finally with \ttconstructor{Refl}, which ensures
 that the provided index of the value matches up with the expected one.
-There are 4 occurences of \ttconstructor{Con} and \ttconstructor{Refl} in the example, three for  \ttconstructor{Cons} and one for \ttconstructor{Nil}.
+There are 4 occurrences of \ttconstructor{Con} and \ttconstructor{Refl} in the example, three for  \ttconstructor{Cons} and one for \ttconstructor{Nil}.
 For all cases the first two arguments represent the constructor label and associated tag. 
 For \ttconstructor{Cons}, the first following argument is the length of the rest of the vector (the value of index \ttvar{n}) followed by the value of the list head and the list tail, ending with \ttconstructor{Refl}.
 For \ttconstructor{Nil}, the value is ended with \ttconstructor{Refl} since it doesn't contain any data.
@@ -540,7 +557,7 @@ For \ttconstructor{Nil}, the value is ended with \ttconstructor{Refl} since it d
 \begin{center}
     \includegraphics[scale=0.5]{Figures/VectorSynthesisedExample.png}
 \end{center}
-\caption{Example Vector representing \ttconstructor{[}\ttliteral{1}~\ttconstructor{,}~\ttliteral{2}~\ttconstructor{,}~\ttliteral{3}\ttconstructor{]} as a Value of a Synthesised Description}
+\caption{Example vector representing \ttconstructor{[}\ttliteral{1}~\ttconstructor{,}~\ttliteral{2}~\ttconstructor{,}~\ttliteral{3}\ttconstructor{]} as a value of a synthesised description}
 \label{fig:exmvecsynthvecdesc}
 \end{figure}
 
@@ -563,22 +580,22 @@ Since Idris can infer the values of \ttvar{a} and \ttvar{n} automatically in thi
 \end{figure}
 
 Using these synonyms, the constructor of the value in example in Figure~\ref{fig:exmvecsynthvecdesc} becomes simpler and much more readable. Figure~\ref{fig:exmvecsynthvecdescconstrs} shows the updated version,
-and it looks almost exactly like the original value it needed to describe \ttliteral{[1, 2, 3]}.
+and it looks almost exactly like the original value it needed to describe \ttconstructor{[}\ttliteral{1}~\ttconstructor{,}~\ttliteral{2}~\ttconstructor{,}~\ttliteral{3}\ttconstructor{]}.
 
 
 \begin{figure}[ht]
 \begin{center}
     \includegraphics[scale=0.5]{Figures/VectorSynthesisedConstructorsExample.png}
 \end{center}
-\caption{More Readable Version of \ttconstructor{[}\ttliteral{1}~\ttconstructor{,}~\ttliteral{2}~\ttconstructor{,}~\ttliteral{3}\ttconstructor{]}  using previously-defined Aliases}
+\caption{More readable version of \ttconstructor{[}\ttliteral{1}~\ttconstructor{,}~\ttliteral{2}~\ttconstructor{,}~\ttliteral{3}\ttconstructor{]} using aliases from Figure~\ref{fig:funcconstrsynthvec}}
 \label{fig:exmvecsynthvecdescconstrs}
 \end{figure}
 
 \section{The (mostly) gentle art of levitation}
 \label{sec:TheMostlyGentleArtofLevitation}
 The previous sections presented a series of constructions that makes it possible to have described types.
-What may have become apparent for the user is that many of these constructions such as \tttype{Data}, \tttype{Tag} and \ttdec{switch} cannot themselves be described,
-since they are necessary dependencies for having descriptions.
+What may have become apparent for the reader is that many of these constructions such as \tttype{Data}, \tttype{Tag} and \ttdec{switch} cannot themselves be described,
+since they are necessary building blocks for having descriptions.
 However, what might be surprising is that the description type \tttype{Desc} itself, isn't in fact limited by such a constraint
 and can be described using itself.
 This is the key point addressed by \textcite{Chapman:2010:GAL:1863543.1863547} in "The Gentle Art of Levitation".
@@ -586,7 +603,7 @@ This is the key point addressed by \textcite{Chapman:2010:GAL:1863543.1863547} i
 The description datatype \tttype{Desc} contains many of the constructors needed to describe itself.
 However, one might experience trouble when trying to describe \ttconstructor{Arg} since it requires an argument of the following type:
 \texttt{(}\ttvar{a}~->\tttype{Desc}~\ttvar{ix}\texttt{)}.
-This argument describes a function which result type is the datatype itself (a so-called higher-order inductive argument), which \ttconstructor{Rec} isn't strong enough to express since it only permits recursive values.
+This argument describes a function which result type is the datatype itself (a so-called higher-order inductive argument), which \ttconstructor{Rec} isn't strong enough to express since it only permits primitive recurrences.
 Figure~\ref{fig:deschrec} shows a new constructor \ttconstructor{HRec}, which allows specification of such higher-order inductive arguments, it takes a type \ttvar{a} which specifies
 the expected input type of such argument in addition to the rest of arguments that are expected by \ttconstructor{Rec}.
 
@@ -625,8 +642,10 @@ The description for each constructor is translated using the same techniques pre
 Perhaps, the key thing to notice is that a function \ttdec{switchDesc} was used instead of \ttdec{switch} when describing \tttype{Desc}.
 Figure~\ref{fig:switchdesc} shows how \ttdec{switchDesc} is defined by specialising \ttdec{switch}. However, if \tttype{Desc} is a described type based on \ttdec{DescDesc} then such a definition would be circular.
 This is because the general \ttdec{switch} requires the result type \tttype{Desc} to be given as an argument, but \tttype{Desc} is dependent on \ttdec{DescDesc}. Therefore, \textcite{Chapman:2010:GAL:1863543.1863547} define \ttdec{switchDesc} to be handled specially in their type theory, eliding the definition of the body
-and hard-wiring its return type to be \tttype{Desc}\footnote{Of course, such trick only works if there is know to be a type \tttype{Desc} in the meta-theory. However, the knowledge of its elements is not necessarily required and it is possible to inspect these
-in a similar fashion to other datatypes.}. Now, \ttdec{DescDesc} can be type checked without any issues and \textit{levitation} is achieved.
+and hard-wiring its return type to be \tttype{Desc}
+\footnote{Of course, such trick only works if the type \tttype{Desc} is already known to be in the meta-theory.
+However, the knowledge of its elements is not necessarily required and it is possible to inspect these in a similar fashion to other datatypes.}.
+Now, \ttdec{DescDesc} can be type checked without any issues and \textit{levitation} is achieved.
 
 \begin{figure}[ht]
 \begin{center}
@@ -639,44 +658,294 @@ in a similar fashion to other datatypes.}. Now, \ttdec{DescDesc} can be type che
 \chapter{Partial evaluation}
 \label{cha:PartialEvaluation}
 
+The description datatype \tttype{Desc} presented in Chapter~\ref{cha:GenericProgramming} was very flexible and could express many common algebraic datatypes.
+However as discussed in Section~\ref{sub:Example:Constructing Vectors}, the corresponding terms used to construct values of described types were much larger and more complex than the corresponding values of ordinary datatypes, yet they do not convey much more relevant information.
+The reason is that much of the contained data is static information needed solely to provide the right form for generic algorithms, but is not needed when dealing with specific structures.
+Therefore this chapter discusses relevant partial evaluation techniques needed to minimise the size of the large terms in order to improve runtime performance, by specialising the algorithm with regards to relevant static data when possible.
+
 \section{The static nature of programs}
 \label{sec:Thestaticnatureofprograms}
-It hardly comes as a surprise that for many programs, not all of their input might be dynamic.
-There are many reasons to structure programs like readability, reusability and debuggability, even if all the input is static.
+It hardly comes as a surprise, that for many programs, not all of their input might be dynamic.
+Sometimes it is due to the way programs are structured in a modular fashion (e.g. functions or objects), where readability and reusability are highly valued even if some of the input to these structures is static.
 For example, writing \ttdec{minutesInADay}~\texttt{=}~\ttliteral{24}~\texttt{*}~\ttliteral{60} is usually seen as more preferable to writing \ttdec{minutesInADay}~\texttt{=}~\ttliteral{1440}, since
 it better captures the intent of the programmer.
+Other times, it may be because that the input is known ahead of time and therefore in some way hard-coded (\textit{e.g.}, configuration files or constants).
+No matter what reason, it can be said that any program \ttdec{p} accepts a series of static input \ttvar{i$_{s_0}$}\texttt{\ldots}\ttvar{i$_{s_n}$}~\texttt{$\in$}~\ttvar{I$_{s}$} and a series of dynamic input \ttvar{i$_{d_0}$}\texttt{\ldots}\ttvar{i$_{d_m}$}~\texttt{$\in$}~\ttvar{I$_{d}$}, resulting in some output \ttvar{O}.
+%A program can be said to have both static and dynamic input
 
-However, in many cases it is desirable to only compute static formulas once at compile time instead of suffering a performance loss at runtime every time the program is run.
-One technique for static computation of programs, is called \textit{partial evaluation}\,\autocite{Jones:1993:PEA:153676}. A program that does partial evaluation \ttdec{mix} is called a \textit{partial evaluator}, and accepts as input another program (often called the \textit{object program}) and
-a series of static input for that particular program. The result of the partial evaluator \ttdec{mix} is a new program \textit{specialised} with regards to the specified input.
+In many cases it is desirable to only compute programs with known input once and for all, instead of suffering a performance loss every time the program is run.
+One technique for static computation of programs, is called \textit{partial evaluation}\,\autocite{Jones:1993:PEA:153676}. A program that does partial evaluation \ttdec{mix} is called a \textit{partial evaluator}, and accepts as input another program (often called the \textit{object program}) and a series of static input for that particular program.
+The result of \ttdec{mix} is a new program called the \textit{residual program} which is \textit{specialised} with regards to the specified static input.
+That is for any program \ttvar{p}, partially evaluating it regarding its static input \ttvar{I$_s$}---that is \ttdec{mix}~\ttvar{p}~\ttvar{I$_s$}---results in a residual program \ttvar{p$_r$}.
+The residual program \ttvar{p$_r$} accepts the remaining dynamic input \ttvar{I$_d$} and produces the same expected result \ttvar{O}; therefore, the following equation is satisfied: \ttvar{p}~\ttvar{I$_s$}~\ttvar{I$_d$}~\texttt{$\equiv$}~\texttt{(}\ttdec{mix}~\ttvar{p}~\ttvar{I$_s$}\texttt{)}~\ttvar{I$_d$}~\texttt{$\equiv$}~\ttvar{p$_r$}~\ttvar{I$_d$}~\texttt{$\equiv$}~\ttvar{O}.
 
-\begin{figure}
+The canonical example of partial evaluation \autocite{Jones:1993:PEA:153676,mogensen1997,taha2004gentle} is the \ttdec{power} function which calculates $x^n$ and is shown in Figure~\ref{fig:powexmp}.
+In this version of \ttdec{power}, the control flow is mostly determined by its first variable \ttvar{n}.
+Therefore, if \ttvar{n} is provided statically then it is possible to specialise \ttdec{power} to avoid the branching dependent on \ttvar{n} and recursion at run-time.
+
+\begin{figure}[ht]
 \begin{center}
     \includegraphics[scale=0.5]{Figures/PowerExample.png}
 \end{center}
-\caption{PowerExample}
+\caption{The function \ttdec{power} which calculates the value $x^n$ for input integers $x$ and $n$}
 \label{fig:powexmp}
 \end{figure}
 
+Figure~\ref{fig:powspec} shows a partially evaluated version of power, where \ttvar{n} is fixed statically to \ttliteral{5}.
+To achieve such optimisation, the partial evaluator must support various interesting optimisation techniques such as \textit{constant folding}, \textit{program point specialisation} and \textit{unfolding}/\textit{transition compression} \autocite{Jones:1993:PEA:153676} which will be discussed further in Section~\ref{sec:Anoptimisingpartialevaluator}.
 
-\section{Binding-time analyses of programs}
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PowerSpecialised.png}
+\end{center}
+\caption{\ttdec{power} specialised with regards to \ttvar{n} set to \ttliteral{5}}
+\label{fig:powspec}
+\end{figure}
+
+\section{An optimising partial evaluator}
+\label{sec:Anoptimisingpartialevaluator}
+Since the only requirement for a partial evaluator is that the residual program depends only on some dynamic input, it is simple to make a trivial partial evaluator.
+The trivial partial evaluator simply ``hard-codes'' the provided static input, and otherwise leaves the input object program unchanged.
+However, such partial evaluator is hardly interesting from a performance perspective.
+In order for a partial evaluator to be interesting, it must be able to utilise a set of optimisation techniques while evaluating a program.
+In this section, three commonly used optimisation techniques for partial evaluators are presented: constant folding, program point specialisation and unfolding.
+
+\subsection{Program Point Specialisation}
+\label{sub:Program Point Specialisation}
+According to \textcite{Jones:1993:PEA:153676}, a \textit{program point} is a referable point of execution that forms a part of a larger program.
+For many modern languages, a program point would be a function or procedure; however, it could also be a label in an assembly language or a clause definition in a logic language.
+Program point specialisation is the act of creating new versions of existing program points specialised with regards to some statically provided input.
+That is, a specialised version of a program point \ttvar{l} is a pair \texttt{$\langle$}\ttvar{l}~\texttt{,}~\ttvar{I$_s$}\texttt{$\rangle$} such that \ttvar{I$_s$} is some provided
+static input somewhere in the program.
+Figure~\ref{fig:powxuf} shows a version of \ttdec{power} where \ttvar{n} is specialised to \ttliteral{5}, and all recursive calls to power are partially evaluated using program point specialisation.
+
+\subsubsection{Polyvariant Specialisation}
+\label{par:PolyvariantSpecialisation}
+A program point specialisation is said to be \textit{polyvariant} if there are multiple versions of originally the same program point specialised with varying static input \autocite{Hughes:1999:LNCS:1706,Jones:1993:PEA:153676}.
+For example, the \ttdec{power} function is specialised with regards to different values for the exponent \ttvar{n} in Figure~\ref{fig:powxuf} and is therefore polyvariant.
+
+A special case of polyvariant specialisation, is when a program point specialisation is said to exhibit a \textit{polyvariant division}. A division is polyvariant if the set of static arguments varies for specialised versions of that particular program point.
+Finding a division between static and dynamic arguments of a program point is not a trivial task, and especially not finding a polyvariant one.
+Section~\ref{sec:Binding-timeAnalysisofPrograms} discusses what techniques there are for finding such divisions.
+
+
+\subsection{Constant folding}
+\label{sub:Constant folding}
+Simply put, constant folding is the idea of reducing pure expressions with statically known arguments as much as possible.
+This includes simple primitive arithmetic and logic operations such as addition, multiplication, conjunction and equality testing; but also pruning statically-determined branching such as \texttt{\textbf{if}}-expressions\,\autocite{Wegman:1991:CPC:103135.103136,Jones:1993:PEA:153676} or \texttt{\textbf{case}}-trees\,\autocite{boquist1999code}.
+
+\paragraph{Reducing arithmetic and logical operations}
+\label{par:Reducingarithmeticandlogicaloperations}
+If all the operands of a given arithmetic or logical operator are statically determined then reducing such an operation is simply evaluating the result, \textit{e.g.}, for an expression \ttliteral{2}~\texttt{+}~\ttliteral{2} it can simply be reduced to the value \ttliteral{4}.
+However, constant propagation algorithms are often allowed to do other types of simplifying reductions where some operands are dynamic, such as reducing addition with \ttliteral{0}, multiplication with \ttliteral{1} or conjunction with \ttconstructor{True}.
+
+Figure~\ref{fig:powxcf} shows \ttdec{power} from Figure~\ref{fig:powexmp} again under specialisation with \ttvar{n} set to \ttliteral{5}. In the figure, all arithmetic expressions (namely \ttdec{mod}, \ttdec{div} and ``\texttt{-}'') and logic expressions (namely ``\texttt{==}'') have been reduced to simple integer values.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PowerExampleConstantFolding.png}
+\end{center}
+\caption{Reduction of arithmetic and logical expression in \ttdec{power} with \ttvar{n} set to \ttliteral{5}}
+\label{fig:powxcf}
+\end{figure}
+
+
+\paragraph{Branch pruning}
+\label{par:Branch pruning}
+If a conditional is somehow reduced to a constant value by another optimisation, it is possible to completely eliminate branching in \texttt{\textbf{if}}- or \texttt{\textbf{case}}-expressions.
+For \texttt{\textbf{if}}-expressions, if the conditional is reduced to \ttconstructor{True} then the whole expression is reduced to the \texttt{\textbf{then}} branch, otherwise (if it is reduced to \ttconstructor{False}) then the whole expression is reduced to the \texttt{\textbf{else}} branch.
+For \texttt{\textbf{case}}-expressions, they are simply reduced to the branch that matches the pattern of the value provided.
+
+Figure~\ref{fig:powxbp} shows an updated version of \ttdec{power\_n5} from Figure~\ref{fig:powxcf}.
+Since all \texttt{\textbf{if}}-expressions depended on constant values, it was possible to completely eliminate branching from the result.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PowerExampleBranchPruning.png}
+\end{center}
+\caption{Pruning of statically determined branches for \ttdec{power\_n5}}
+\label{fig:powxbp}
+\end{figure}
+
+Using more advanced optimisation techniques, it is still possible to reduce branches of \texttt{\textbf{case}}-expressions if only some parts of the conditional are statically determined. If the reader is interested, please refer to \textcite{PeytonJones:1992:IFL:129390} and \textcite{boquist1999code}.
+
+\subsection{Unfolding}
+\label{sub:Unfolding}
+To avoid too many unnecessary indirections in specialised programs, a perhaps important technique is unfolding.
+Unfolding is usually done at sites where there are function calls and corresponds to inlining the body of the function that is called at the place where it is called.
+In addition to simply inlining the body of the function, unfolding usually needs to do renaming of local variables to avoid clashes with the external environment.
+For a languages with labels, transition compression serves as a good analogue to unfolding, where a jump to a label is replaced with the following instructions.
+While there are many advantages to unfolding, and likewise transition compression, if not careful the partial evaluator can end up in an infinite loop or the resulting code can end up with exponential size in the case of poorly chosen static variables\,\autocite{Jones:1993:PEA:153676}.
+Therefore, unfolding cannot be seen as a generally safe technique and must be used with care in places where there are branching or similar.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PowerExampleBranchUnfolding1.png}
+\end{center}
+\caption{The function \ttdec{power\_n5} and necessary dependencies after program point optimisation
+and constant folding}
+\label{fig:powxuf}
+\end{figure}
+
+Figure~\ref{fig:powxuf} shows further transformation of the code in Figure~\ref{fig:powxbp}, after the completion of necessary program point specialisation and constant folding.
+As can be observed in the figure, there is alot of indirection in each specialisation of \ttdec{power} requiring a new function call for all cases except when \ttvar{n} is set to \ttliteral{0}.
+It is therefore desirable to do unfolding to improve performance, and doing unfolding for \ttdec{power\_n5} brings us back to Figure~\ref{fig:powspec} which is the final form of the optimisation.
+
+
+\section{Dividing the static and dynamic parts of a program}
 \label{sec:Binding-timeAnalysisofPrograms}
-\textit{Finding the relevant constant parts of the program.}
+In Section~\ref{sec:Thestaticnatureofprograms}, an argument was made that programs usually contain both static and dynamic input.
+A division for a program point is specifically an assignment of a binding-time, either static or dynamic, to each argument and expression at that point.
+There are generally two non-exclusive ways to get the binding-time of variables, one is using a binding-time \textit{analysis}
+and the other is requiring \textit{annotation} of binding-time by the user using \textit{e.g.}, \textit{two-level} syntax\,\autocite{Nielson:1989:TSA:75491.75492,Jones:1993:PEA:153676}.
+In the broadest sense, binding-time analysis is vaguely similar to type inference while checking whether binding-time is well-annotated is vaguely similar to type checking.
 
-\section{Specialisation as a form of optimisation}
-\label{sec:SpecialisationasaFormofOptimization}
-\textit{Performance benefits of program specialisation. Pitfalls.}
+\subsection{Binding-time analysis}
+\label{sub:Binding-time analysis}
+The core idea in a binding-time analysis (BTA) is to infer from given initial program input, what parts of a program may be executed statically.
+For functional programming languages like Idris, there are roughly four classes of expressions which have different set of binding-time behaviour:
+constants, variables, function application/operators, and conditionals/case analysis.
+\begin{itemize}
+  \item Constants are always assumed to be static, independent of whether they are for primitive types such as integers or strings, or base constructors of datatypes.
+  \item The binding time for a variable usually depends on the type of variable and the surrounding environment.
+    If the variable is let-bound or globally declared it will get the binding-time of the expression that is assigned to it.
+    For function arguments they are assumed to be static in the function body, unless they appear dynamically in a recursive call.
+    The partial evaluator can only optimise function calls when their arguments are known to be static, but such requirement is put where the function is called and not in the body of the function.
+  \item The result of function and operator application is assumed to be static if all input arguments are static, otherwise it is dynamic.
+   One must take special care of functions which perform environmental side-effects, such as those using the \tttype{IO}-monad in Idris, which result must always be classified as dynamic (since the result can't be determined at binding time).
+  \item Conditionals expressions like \texttt{\textbf{if}} and \texttt{\textbf{case}} are considered to be static if the condition they depend upon is static (since that determines the control flow), otherwise dynamic.
+\end{itemize}
+
+When the BTA is complete, the partial evaluator can use such information to create a new residual program.
+For each function call with static arguments, it can choose to reduce all dependent static control flow and expressions; thereby creating a new program that depends solely on dynamic input.
+
+
+%\begin{mathpar}
+  %\inferrule*[Left=Const]{  }{\Gamma \vdash c \Rightarrow S}
+%\end{mathpar}
+
+%\begin{mathpar}
+  %\inferrule*[Left=Var]{x : \tau \in \Gamma}{\Gamma \vdash x \Rightarrow \tau}
+%\end{mathpar}
+
+%\begin{mathpar}
+  %\inferrule*[Left=App]{\Gamma \vdash x_0 \Rightarrow \Gamma \vdash \tau_0\ldots x_{n-1} \Rightarrow \tau_n \\ \text{$f$ is a function with $n$ arguments}}
+  %{\Gamma \vdash f x_0 \ldots x_{n-1} \Rightarrow \sqcup_{i = 0}^{n-1} \tau_i}
+%\end{mathpar}
+
+\subsection{Two-level syntax}
+\label{sub:Two-levelsyntax}
+Another approach to state binding-time of an expression is to allow the user to annotate programs using two-level syntax.
+This approach is used in \textcite{Jones:1993:PEA:153676}, but is also available for popular programming languages such as OCaml\,\autocite{taha2004gentle} and Java\,\autocite{Westbrook:2010:MJM:1809028.1806642}.
+The core idea behind two-level syntax is to provide static version of available expressions such as control structures, application and lambda abstractions in addition to the dynamic versions.
+Two-level expressions that are static are often presented as underlined versions of their dynamic counterparts (\textit{e.g.}, \texttt{\textbf{\underline{if}}}), and usually an operator is used to distinguish between
+static and dynamic application such as \texttt{\textbf{\underline{\$}}} or \texttt{\textbf{\underline{@}}}.
+In order to allow embedding of static expressions inside dynamic values a built-in annotation \texttt{\textbf{lift}} is usually provided.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PowerAnnotated.png}
+\end{center}
+\caption{Two-level syntax annotated version of \ttdec{power} function, where underlined operations are static}
+\label{fig:powan}
+\end{figure}
+
+Figure~\ref{fig:powan} shows an annotated version of \ttdec{power} where \ttvar{n} is assumed to be provided statically.
+The annotation shows what will be reduced after a value for \ttvar{n} is provided, and as can be seen in the specialised version (see Figure~\ref{fig:powspec}) there
+are no traces left of expression marked as static in the residual program.
+If \ttvar{n} is to be provided at runtime, it is usually possible to forget the binding-time annotations and execute all of \ttdec{power} dynamically.
+
+
+\section{Constructor specialisation}
+\label{sec:ConstructorSpecialisation}
+The previous sections focused mostly on partial evaluation as a way of optimising code, however \textcite{Mogensen:1993:CS:154630.154633} and \textcite{Dussart:1995:PCS:215465.215554} suggest that partial evaluation is also a useful technique to optimise data.
+The core idea is to specialise constructors in the same vein as specialising functions, or rather specifically, create new constructors as alternatives of algebraic datatypes where the statically provided input is fixed (or perhaps completely erased).
+
+\subsection{Example: Serialisation to S-expressions}
+\label{sub:Example:SerialisationtoS-expressions}
+
+Assume there is a program that serialises an association list to an S-expression and is specialised with regards to a specific schema where it is either the name and age of a person or the name of a department.
+Figure~\ref{fig:conspec} shows how a reasonable result could look like after using ordinary partial evaluation techniques.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/ConstructorSpecialisation.png}
+\end{center}
+\caption{A program for serialisation \ttdec{serialize}, specialised using classic techniques with regards to a specific schema}
+\label{fig:conspec}
+\end{figure}
+
+There are however still some drawbacks with such program: it requires pattern matching on nested constructors, and does multiple string comparisons, both of which are potentially very time consuming.
+Yet, much of the data is statically specified, so it seems that there is still room for improvement.
+Luckily, constructor specialisation permits specialisation of data by creating suitable constructors in a suitable datatype.
+Figure~\ref{fig:conspecdata} shows how new constructors are created in a datatype \tttype{Schema} such that all static data is eliminated, and two suitable constructors are created: \ttconstructor{Person} and \ttconstructor{Department}
+\footnote{For ease of reading, the naming is prettified compared to what automated constructor specialisation would generate}.
+After constructor specialisation, now the only comparison necessary is comparing tags of datatypes, something which should be much more efficient than the old solution.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/ConstructorSpecialisationData.png}
+\end{center}
+\caption{A constructor specialised version of \ttdec{serialize}}
+\label{fig:conspecdata}
+\end{figure}
+
+\subsection{Algorithm for specialising constructors}
+\label{sub:Algorithm for specialising constructors}
+\textcite{Dussart:1995:PCS:215465.215554} presents a step-by-step algorithm for performing constructor specialisation that has multiple advantages compared to the original one presented in \textcite{Mogensen:1993:CS:154630.154633}.
+One advantage is that it specialises constructors in a polyvariant fashion, which means that specialisation of one datatype can create multiple new datatypes.
+Another advantage is that it only requires one pass for calculating the fix-point calculations necessary in order to create new suitable types.
+The algorithm consists of three phases: finding a minimal pattern that describes the occurrences of constructors with static values, generating the necessary code operating on such values
+and finally creating suitable datatypes to hold the specialised constructors.
+
+\paragraph{A grammar of datatypes}
+\label{par:Findingaminimalgrammar}
+The first phase of the algorithm is to find a possibly recursive pattern or \textit{grammar} that describes what particular sets of constructors occur in the same expression
+at given program points. For the example presented in Figure~\ref{fig:conspec}, the final grammar would look like something shown in Example~\ref{exmp:grammarspec} (in BNF style notation).
+
+\setlength{\grammarparsep}{12pt plus 1pt minus 1pt} % increase separation between rules
+\setlength{\grammarindent}{12em}
+\begin{exmp}
+  \begin{grammar}
+
+    <string> ::= \ldots
+
+    <schema> ::= [("name", <string>), ("age", <string>)]
+    \alt [("department", <string>)]
+  \end{grammar}
+  \label{exmp:grammarspec}
+\end{exmp}
+
+The grammar is extracted by analysing the code structure for where data is constructed and suitably combining such data, e.g. having alternatives in the grammar where there are \texttt{\textbf{case}}-expressions.
+To avoid non-termination while partially evaluating, the analysis tries to generalise (that is specify as dynamic) places where there occur recursive references to the same datatype.
+The effect of that is that non-terminals in the grammar might be defined recursively, which closely mimics the structure of inductive datatypes.
+Following extraction of the grammar, fix-point computation techniques inspired by \textcite{Jones:1986:DFA:512644.512672} are used to find a minimal function graph that depends on such grammar.
+%A bit vague
+
+\paragraph{Code generation}
+\label{par:Code generation}
+The second phase uses the minimal function graph found in the first one to construct specialised versions of functions.
+This happens by traversing the graph and specialising each function as normal, recursively rebuilding expressions from specialised versions.
+\texttt{\textbf{case}}-expressions are handled specially during code generation in order to accommodate the specialised datatypes, and therefore they are restructured, adding new branches, such that they fit the extracted grammar.
+
+\paragraph{Defining suitable types}
+\label{par:Defining suitable types}
+The final phase is to group the newly generated specialised constructors into suitable type definitions.
+This is done in order for the residual program to be valid (type correct) and the compiler can perform other datatype optimisations.
+The process prestented is simple: it starts with all constructors being in their own datatype, and merges datatype as necessary when a program dependens on values from either datatype.
 
 \chapter{Levitating Idris}
 \label{cha:LevitatingIdris}
 
-\section{A pragmatic implementation of levitation}
-\label{sec:APragmaticImplementationofLevitation}
-\textit{How the general concept of levitation was transferred to Idris.}
+\section{Creating descriptions from ordinary data declarations}
+\label{sec:Creating descriptions from ordinary data declarations}
 
-\section{Description synthesis from ordinary data declarations}
-\label{sec:DescriptionSynthesisFromOrdinaryDataDeclarations}
-\textit{How ordinary data-declarations are synthesized to levitational descriptions.}
+\section{Parametric extension to descriptions}
+\label{sec:Parametricextensiontodescriptions}
+
+\section{Proposed Improvements}
+\label{sec:ProposedImprovements}
+
 
 \chapter{Practical examples}
 \label{cha:PracticalExamples}
