@@ -1,0 +1,371 @@
+;; RefTeX parse info file
+;; File: /Users/asal/Documents/Udvikling/MSc-Thesis/report.tex
+;; User: asal (Ahmad Salim Al-Sibahi)
+
+(set reftex-docstruct-symbol '(
+
+
+(xr nil "\\\\\\\\\\\\")
+
+(index-tags)
+
+(is-multi nil)
+
+(bibview-cache)
+
+(master-dir . "/Users/asal/Documents/Udvikling/MSc-Thesis/")
+
+(label-numbers)
+
+(bof "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex")
+
+(toc "toc" "  * Abstract" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 1 "*" "\\chapter*{Abstract}" 1712)
+
+(toc "toc" "  1 Introduction" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 1 "1" "\\chapter{Introduction}" 2223)
+
+("cha:Intoduction" "s" "\\section{Context}  Algebraic datatypes such as Boolean values, lists or trees form a core part of mo" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    1.1 Context" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "1.1" "\\section{Context}" 2270)
+
+("sec:Context" "s" "Algebraic datatypes such as Boolean values, lists or trees form a core part of modern functional pro" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("exmp:prettyprint" "s" " " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("kw:desc" "s" ". While generic programming sounds promising, it is usually seen as an aspect of Haskell\\,\\autocite{" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("sub:TheImportanceofGenericityinDependently-typedLanguages" "s" "%\\textit{The similarity of structure and various slightly-different indexing of types.} \\section{Pro" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" 5009)
+
+(toc "toc" "    1.2 Problem definition" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "1.2" "\\section{Problem definition}" 5165)
+
+("sec:ProblemDefinition" "s" "The current work on generic programming in dependently-typed languages presents both elegant and typ" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    1.3 Aim and scope" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "1.3" "\\section{Aim and scope}" 6416)
+
+("sec:AimandScope" "s" "The aim of this research is to provide a practical and efficient implementation of described types i" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    1.4 Significance" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "1.4" "\\section{Significance}" 7682)
+
+("sec:Significance" "s" "The main contributions of this thesis are: \\begin{itemize} " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    1.5 Overview" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "1.5" "\\section{Overview}" 8576)
+
+("sec:Overview" "s" "The report is structured as follows. Chapter~\\ref{cha:GenericProgramming} presents an introduction t" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "  2 Generic programming" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 1 "2" "\\chapter{Generic programming}" 9569)
+
+("cha:GenericProgramming" "s" "\\section{The generic structure of inductive data types}  \\subsection{Anatomy of a datatype} \\label" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    2.1 The generic structure of inductive data types" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "2.1" "\\section{The generic structure of inductive data types}" 9630)
+
+("sec:TheGenericStructureofInductiveDataTypes" "s" "\\subsection{Anatomy of a datatype}  To build an intuition that will be useful in understanding descr" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      2.1.1 Anatomy of a datatype" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "2.1.1" "\\subsection{Anatomy of a datatype}" 9738)
+
+("sub:AnatomyofaDatatype" "s" "To build an intuition that will be useful in understanding descriptions, let us first start by looki" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    2.2 Blarg" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "2.2" "\\section{Blarg}" 10405)
+
+("sec:blarg" "s" nil "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil "")
+
+(toc "toc" "      2.1.2  " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "2.1.2" "\\subsection{}" 10381)
+
+("fig:anato
+  \\subsection{" "f" "Annotated components of a datatype Declaration" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      2.1.2 A description for datatypes" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "2.1.2" "\\subsection{A description for datatypes}" 12728)
+
+("sub:ADescriptionforDatatypes" "s" "It is now possible to try to represent a suitable datatype for descriptions. Figure~\\ref{fig:descrip" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:simpldescdatatype" "f" "A datatype that describes other datatypes" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:declunit" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:descunit" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "          2.1.2.0.1 Constructor arguments" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 5 "2.1.2.0.1" "\\paragraph{Constructor arguments}" 15033)
+
+("fig:declpair" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:descpair" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "          2.1.2.0.2 Choice of constructors" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 5 "2.1.2.0.2" "\\paragraph{Choice of constructors}" 16390)
+
+("fig:decleither" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:desceither" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "          2.1.2.0.3 Recursive arguments" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 5 "2.1.2.0.3" "\\paragraph{Recursive arguments}" 17417)
+
+("fig:declnat" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:descnat" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "          2.1.2.0.4 Parameters" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 5 "2.1.2.0.4" "\\paragraph{Parameters}" 18643)
+
+("fig:decllist" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:desclist" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      2.1.3 Indexing descriptions" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "2.1.3" "\\subsection{Indexing descriptions}" 20502)
+
+("sub:Indexingdescriptions" "s" "To allow datatypes to be indexed by values, the description structure takes a parameter that describ" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:descriptiondatatype" "f" "Description for datatypes with possible indices" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:descvec" "f" "Described version of \\tttype{Vec}" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "        2.1.3.1 Challenges and limitations" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 4 "2.1.3.1" "\\subsubsection{Challenges and limitations}" 23515)
+
+(toc "toc" "      2.1.4 An informative encoding of constructors" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "2.1.4" "\\subsection{An informative encoding of constructors}" 26307)
+
+("sub:AnInformativeEncodingofConstructors" "s" "In Section~\\ref{sub:ADescriptionforDatatypes} a Boolean variable was used to determine the choice be" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:ctorlabels" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:vectctors" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:ctortags" "f" "Tags: A Structure for Picking a Constructor from a Label Collection" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:vecctornil" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:vecctorcons" "f" "NO MATCH FOR CONTEXT REGEXP" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:vecctor" "f" "Example: Tags for constructors of \\tttype{Vec}" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      2.1.5 A constructive type of choice" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "2.1.5" "\\subsection{A constructive type of choice}" 30880)
+
+("sub:AConstructiveTypeofChoice" "s" "Similarly to how \\texttt{\\textbf{if}} was used to map \\tttype{Bool} values to the descriptions of th" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:smallpiop" "f" "The small pi operator: type for case analysis based on constructor tags" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:switchctor" "f" "Calculation of a property based on a specific constructor tag" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:vecdescim" "f" "Description of Vec given a Constructor Tag" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    2.2 Synthesising types from descriptions" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "2.2" "\\section{Synthesising types from descriptions}" 33876)
+
+("sec:SynthesisingDescriptionstoTypes" "s" "In Section~\\ref{sec:TheGenericStructureofInductiveDataTypes} I had shown how it was possible to crea" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      2.2.1 Datatype synthesis" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "2.2.1" "\\subsection{Datatype synthesis}" 34326)
+
+("sub:DatatypeSynthesis" "s" "It is finally time to convert the description to an actual type. Figure~\\ref{fig:synthdata} shows th" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:synthdata" "f" "Synthesising Descriptions into Actual Types" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:datafromdesc" "f" "Knot-tying the Synthesised Description with Itself" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      2.2.2 Example: Constructing vectors" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "2.2.2" "\\subsection{Example: Constructing vectors}" 37579)
+
+("sub:Example:Constructing Vectors" "s" "To get a more concrete intuition on how it is possible to construct data values of described types, " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:synthversvecdesc" "f" "Synthesised Version of Vector Description" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:exmvecsynthvecdesc" "f" "Example vector representing \\ttconstructor{[}\\ttliteral{1}~\\ttconstructor{,}~\\ttliteral{2}~\\ttconstr" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:funcconstrsynthvec" "f" "Functions for constructing values of synthesised vector description" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:exmvecsynthvecdescconstrs" "f" "More readable version of \\ttconstructor{[}\\ttliteral{1}~\\ttconstructor{,}~\\ttliteral{2}~\\ttconstruct" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    2.3 The (mostly) gentle art of levitation" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "2.3" "\\section{The (mostly) gentle art of levitation}" 42367)
+
+("sec:TheMostlyGentleArtofLevitation" "s" "The previous sections presented a series of constructions that makes it possible to have described t" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:deschrec" "f" "A constructor for \\tttype{Desc} to represent higher-order recursion" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:synthhrec" "f" "Synthesising \\ttconstructor{HRec} to a real type" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:descdesc" "f" "Describing the \\tttype{Desc} datatype itself" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:switchdesc" "f" "A specialised version of \\ttdec{switch} which returns descriptions" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "  3 Partial evaluation" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 1 "3" "\\chapter{Partial evaluation}" 47119)
+
+("cha:PartialEvaluation" "s" "The description datatype \\tttype{Desc} presented in Chapter~\\ref{cha:GenericProgramming} was very fl" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    3.1 The static nature of programs" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "3.1" "\\section{The static nature of programs}" 48051)
+
+("sec:Thestaticnatureofprograms" "s" "It hardly comes as a surprise, that for many programs, not all of their input might be dynamic. Some" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:powexmp" "f" "The function \\ttdec{power} which calculates the value $x^n$ for input integers $x$ and $n$" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:powspec" "f" "\\ttdec{power} specialised with regards to \\ttvar{n} set to \\ttliteral{5}" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    3.2 An optimising partial evaluator" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "3.2" "\\section{An optimising partial evaluator}" 51895)
+
+("sec:Anoptimisingpartialevaluator" "s" "Since the only requirement for a partial evaluator is that the residual program depends only on some" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      3.2.1 Program Point Specialisation" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "3.2.1" "\\subsection{Program Point Specialisation}" 52668)
+
+("sub:Program Point Specialisation" "s" "According to \\textcite{Jones:1993:PEA:153676}, a \\textit{program point} is a referable point of exec" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "        3.2.1.1 Polyvariant Specialisation" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 4 "3.2.1.1" "\\subsubsection{Polyvariant Specialisation}" 53648)
+
+("par:PolyvariantSpecialisation" "s" "A program point specialisation is said to be \\textit{polyvariant} if there are multiple versions of " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      3.2.2 Constant folding" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "3.2.2" "\\subsection{Constant folding}" 54649)
+
+("sub:Constant folding" "s" "Simply put, constant folding is the idea of reducing pure expressions with statically known argument" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "          3.2.2.0.1 Reducing arithmetic and logical operations" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 5 "3.2.2.0.1" "\\paragraph{Reducing arithmetic and logical operations}" 55178)
+
+("par:Reducingarithmeticandlogicaloperations" "s" "If all the operands of a given arithmetic or logical operator are statically determined then reducin" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:powxcf" "f" "Reduction of arithmetic and logical expression in \\ttdec{power} with \\ttvar{n} set to \\ttliteral{5}" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "          3.2.2.0.2 Branch pruning" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 5 "3.2.2.0.2" "\\paragraph{Branch pruning}" 56410)
+
+("par:Branch pruning" "s" "If a conditional is somehow reduced to a constant value by another optimisation, it is possible to c" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:powxbp" "f" "Pruning of statically determined branches for \\ttdec{power\\_n5}" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      3.2.3 Unfolding" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "3.2.3" "\\subsection{Unfolding}" 57851)
+
+("sub:Unfolding" "s" "To avoid too many unnecessary indirections in specialised programs, a perhaps important technique is" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:powxuf" "f" "The function \\ttdec{power\\_n5} and necessary dependencies after program point optimisation and const" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    3.3 Dividing the static and dynamic parts of a program" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "3.3" "\\section{Dividing the static and dynamic parts of a program}" 59774)
+
+("sec:Binding-timeAnalysisofPrograms" "s" "In Section~\\ref{sec:Thestaticnatureofprograms}, an argument was made that programs usually contain b" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      3.3.1 Binding-time analysis" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "3.3.1" "\\subsection{Binding-time analysis}" 60648)
+
+("sub:Binding-time analysis" "s" "The core idea in a binding-time analysis (BTA) is to infer from given initial program input, what pa" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      3.3.2 Two-level syntax" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "3.3.2" "\\subsection{Two-level syntax}" 63239)
+
+("sub:Two-levelsyntax" "s" "Another approach to state binding-time of an expression is to allow the user to annotate programs us" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:powan" "f" "Two-level syntax annotated version of \\ttdec{power} function, where underlined operations are static" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    3.4 Constructor specialisation" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "3.4" "\\section{Constructor specialisation}" 65054)
+
+("sec:ConstructorSpecialisation" "s" "The previous sections focused mostly on partial evaluation as a way of optimising code, however \\tex" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      3.4.1 Example: Serialisation to S-expressions" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "3.4.1" "\\subsection{Example: Serialisation to S-expressions}" 65643)
+
+("sub:Example:SerialisationtoS-expressions" "s" "Assume there is a program that serialises an association list to an S-expression and is specialised " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:conspec" "f" "A program for serialisation \\ttdec{serialize}, specialised using classic techniques with regards to " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:conspecdata" "f" "A constructor specialised version of \\ttdec{serialize}" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      3.4.2 Algorithm for specialising constructors" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "3.4.2" "\\subsection{Algorithm for specialising constructors}" 67545)
+
+("sub:Algorithm for specialising constructors" "s" "\\textcite{Dussart:1995:PCS:215465.215554} presents a step-by-step algorithm for performing construct" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "          3.4.2.0.1 A grammar of datatypes" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 5 "3.4.2.0.1" "\\paragraph{A grammar of datatypes}" 68452)
+
+("par:Findingaminimalgrammar" "s" "The first phase of the algorithm is to find a possibly recursive pattern or \\textit{grammar} that de" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("exmp:grammarspec" "s" " " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "          3.4.2.0.2 Code generation" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 5 "3.4.2.0.2" "\\paragraph{Code generation}" 69961)
+
+("par:Code generation" "s" "The second phase uses the minimal function graph found in the first one to construct specialised ver" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "          3.4.2.0.3 Defining suitable types" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 5 "3.4.2.0.3" "\\paragraph{Defining suitable types}" 70510)
+
+("par:Defining suitable types" "s" "The final phase is to group the newly generated specialised constructors into suitable type definiti" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "  4 Levitating Idris" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 1 "4" "\\chapter{Levitating Idris}" 71006)
+
+("cha:LevitatingIdris" "s" "\\section{Creating descriptions from ordinary datatype declarations}  The descriptio" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    4.1 Creating descriptions from ordinary datatype declarations" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "4.1" "\\section{Creating descriptions from ordinary datatype declarations}" 71062)
+
+("sec:Creating descriptions from ordinary data declarations" "s" "The description datatype \\tttype{Desc} described in Chapter~\\ref{cha:GenericProgramming} presents th" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      4.1.1 High-level overview" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "4.1.1" "\\subsection{High-level overview}" 71912)
+
+("sub:High-level overview" "s" "To ease the usage of described types in Idris I have added three new language constructs: an annotat" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("fig:natdeclgen" "f" "An annotation \\texttt{\\textbf{\\%described}} for generating descriptions from declarations" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      4.1.2 Algorithms for generation" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "4.1.2" "\\subsection{Algorithms for generation}" 73778)
+
+("sub:Algorithms for generation" "s" "When a user asks the compiler to generate relevant functions for working with described types (using" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "        4.1.2.1 Generation of labels" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 4 "4.1.2.1" "\\subsubsection{Generation of labels}" 74715)
+
+("ssub:Generation of labels" "s" "The first part of what is generated is a value containing a list of all the constructor names of the" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "        4.1.2.2 Generation of descriptions" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 4 "4.1.2.2" "\\subsubsection{Generation of descriptions}" 75163)
+
+("ssub:Generation of descriptions" "s" "The second part of what is generated is a value containing the description of the target described d" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("alg:gendescd" "s" " " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "        4.1.2.3 Generation of aliases" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 4 "4.1.2.3" "\\subsubsection{Generation of aliases}" 79412)
+
+("ssub:Generation of aliases" "s" "\\section{Parametric extension to descriptions}  \\subsection{The parametricity of parameters} \\label{" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    4.2 Parametric extension to descriptions" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "4.2" "\\section{Parametric extension to descriptions}" 79486)
+
+("sec:Parametricextensiontodescriptions" "s" "\\subsection{The parametricity of parameters}  \\section{Proposed Improvements} \\label{sec:ProposedImp" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "      4.2.1 The parametricity of parameters" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 3 "4.2.1" "\\subsection{The parametricity of parameters}" 79580)
+
+("sub:The parametricity of parameters" "s" "\\section{Proposed Improvements}  \\chapter{Practical examples} \\label{cha:PracticalExamples} \\section" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    4.3 Proposed Improvements" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "4.3" "\\section{Proposed Improvements}" 79671)
+
+("sec:ProposedImprovements" "s" "\\chapter{Practical examples}  \\section{Generic algorithms for deriving type class instances} \\label{" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "  5 Practical examples" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 1 "5" "\\chapter{Practical examples}" 79738)
+
+("cha:PracticalExamples" "s" "\\section{Generic algorithms for deriving type class instances}  \\textit{Examples of generi" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    5.1 Generic algorithms for deriving type class instances" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "5.1" "\\section{Generic algorithms for deriving type class instances}" 79798)
+
+("sec:Genericalgorithmsforderivingtypeclassinstances" "s" "\\textit{Examples of generic deriving of algorithms like decidable equality, pretty printing and poss" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    5.2 Scrapping your dependently-typed boilerplate is hard" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "5.2" "\\section{Scrapping your dependently-typed boilerplate is hard}" 80062)
+
+("sec:Scrappingyourdependently-typedboilerplateishard" "s" "\\textit{A version of the Uniplate library for Idris based on} \\url{http://community.haskell.org/~ndm" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "  6 Optimising Idris for flight" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 1 "6" "\\chapter{Optimising Idris for flight}" 80553)
+
+("cha:OptimizingIdrisforFlight" "s" "\\section{Specialising constructors for specific types}  \\textit{How generalized constructors of " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    6.1 Specialising constructors for specific types" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "6.1" "\\section{Specialising constructors for specific types}" 80629)
+
+("sec:SpecialisingConstructorsforSpecificTypes" "s" "\\textit{How generalized constructors of described types, are specialised as ordinary data structures" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    6.2 Online erasure of unused arguments" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "6.2" "\\section{Online erasure of unused arguments}" 80841)
+
+("sec:OnlineErasureofUnusedArguments" "s" "\\textit{How some type infromation is to be erased at compile time to reduce elaboration overhead. Ve" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    6.3 Static initialization of generic functions" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "6.3" "\\section{Static initialization of generic functions}" 81048)
+
+("sec:StaticInitializationofGenericFunctions" "s" "\\textit{How algorithms that are dependent on the generic structure of a datatype are optimised. Disc" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "  7 Evaluation" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 1 "7" "\\chapter{Evaluation}" 81322)
+
+("cha:Evaluation" "s" "\\chapter{Discussion}  \\section{Future work} \\label{sec:FutureWork} \\section{Conclusion} \\label{sec:C" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "  8 Discussion" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 1 "8" "\\chapter{Discussion}" 81367)
+
+("cha:Discussion" "s" "\\section{Future work}  \\section{Conclusion} \\label{sec:Conclusion} \\printbibliography \\appendix \\cha" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    8.1 Future work" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "8.1" "\\section{Future work}" 81412)
+
+("sec:FutureWork" "s" "\\section{Conclusion}  \\printbibliography \\appendix \\chapter{Generation function} \\label{cha:Generati" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(toc "toc" "    8.2 Conclusion" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 2 "8.2" "\\section{Conclusion}" 81458)
+
+("sec:Conclusion" "s" "\\printbibliography \\appendix \\chapter{Generation function}  \\lstinputlisting[language=Haskell,breakl" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(appendix . t)
+
+(toc "toc" "  A Generation function" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil 1 "A" "\\chapter{Generation function}" 81532)
+
+("cha:Generation function" "s" "\\lstinputlisting[language=Haskell,breaklines=true,numbers=left,caption={Generating relevant function" "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+("app:gendesc" "s" "]{Code/DescriptionGeneration.hs} " "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex" nil)
+
+(bib "/Users/asal/Documents/Udvikling/MSc-Thesis/report.bib")
+
+(eof "/Users/asal/Documents/Udvikling/MSc-Thesis/report.tex")
+))
+
