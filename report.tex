@@ -953,11 +953,10 @@ at given program points. For the example presented in Figure~\ref{fig:conspec}, 
 \setlength{\grammarindent}{12em}
 \begin{exmp}
   \begin{grammar}
-
     <string> ::= \ldots
 
-    <schema> ::= [("name", <string>), ("age", <string>)]
-    \alt [("department", <string>)]
+    <schema> ::= [(''name'', <string>), (''age'', <string>)]
+    \alt [(''department'', <string>)]
   \end{grammar}
   \label{exmp:grammarspec}
 \end{exmp}
@@ -986,15 +985,15 @@ The process prestented is simple: it starts with all constructors being in their
 \section{Creating descriptions from ordinary datatype declarations}
 \label{sec:Creating descriptions from ordinary data declarations}
 The description datatype \tttype{Desc} described in Chapter~\ref{cha:GenericProgramming} presents the necessary plumbing to perform generic programming.
-However, creating described types required a lot of boilerplate code, requiring labels, descriptions and aliases to be manually written out using the provided low-level constructs.
-It would be much better if the compiler could generate the necessary descriptions and aliases from ordinary datatype declarations, since that would provide a more high-level overview of the datatype that mimics what the programmer normally writes.
-This section highlights my effort on extending the Idris language with constructors to make it simpler to work with described types.
+However, creating described types required a lot of boilerplate for encoding, requiring labels, descriptions and aliases to be manually written out using the provided low-level constructs.
+It would be better if the compiler could generate the necessary descriptions and aliases from ordinary datatype declarations since that would provide the powerful generic constructs without sacrificing the immediate readability of the datatype structure.
+This section highlights my effort on extending the Idris language with constructs to make it simpler to work with described types.
 
 \subsection{High-level overview}
 \label{sub:High-level overview}
-To ease the usage of described types in Idris I have added three new language constructs: an annotation on datatypes \texttt{\textbf{\%described}} and two build in operations \texttt{\textbf{labels\_for}} and \texttt{\textbf{desc\_for}}.
-The \texttt{\textbf{\%described}} annotation is used before a datatype declaration (see Figure~\ref{fig:natdeclgen}), and specifies to the compiler that it should generate functions relevant to working with described types.
-The functions that are generated are in similar style to the ones presented in Sections~\ref{sub:ADescriptionforDatatypes}--\ref{sub:Example:Constructing Vectors}, and represents: the constructor labels of type \tttype{CEnum} for the datatype, the description of type \tttype{Desc} for the datatype, an alias for the described version of the datatype and relevant aliases for its constructors.
+To make it easier to use described types in Idris, I have added three new language constructs: one annotation on datatypes \texttt{\textbf{\%described}} and two built-in operations \texttt{\textbf{labels\_for}} and \texttt{\textbf{desc\_for}}.
+The \texttt{\textbf{\%described}} annotation has to appear prior to a datatype declaration (see Figure~\ref{fig:natdeclgen}), and specifies that the compiler should generate the relevant constructs for working with described types.
+The constructs that are generated are similar in style to the ones presented in Sections~\ref{sub:ADescriptionforDatatypes}--\ref{sub:Example:Constructing Vectors}, and represent: the constructor labels of type \tttype{CEnum} for the datatype, the description of type \ttdec{TaggedDesc} for the datatype, an alias for the described version of the datatype and relevant aliases for its constructors.
 
 \begin{figure}
 \begin{center}
@@ -1006,20 +1005,20 @@ The functions that are generated are in similar style to the ones presented in S
 
 To access the generated constructor labels for a particular datatype, the \texttt{\textbf{labels\_for}} operation is used.
 For example, to access the generated version of \ttdec{VecCtors} from Figure~\ref{fig:vectctors}, one must use \texttt{\textbf{labels\_for}}~\tttype{Vec}.
-Similarly \texttt{\textbf{desc\_for}} is used to access the generated description for a datatype, \textit{e.g.}, \texttt{\textbf{desc\_for}}~\tttype{Vec} returns the equivalent value of \ttdec{VecDesc} from Figure~\ref{fig:descvec}.
+Similarly \texttt{\textbf{desc\_for}} is used to access the generated description for a datatype, \textit{e.g.}, \texttt{\textbf{desc\_for}}~\tttype{Vec} returns the equivalent value of \ttdec{VecDesc} from Figure~\ref{fig:vecdescim}.
 The type and constructor aliases are chosen to match the signature and name of the datatype to be described, similarly to how it was done in Section~\ref{sub:Example:Constructing Vectors}.
 
 \subsection{Algorithms for generation}
 \label{sub:Algorithms for generation}
 When a user asks the compiler to generate relevant functions for working with described types (using \texttt{\textbf{\%described}}), then the compiler performs generation of four types of functions:
 one representing the constructor labels of the datatype, one representing the description of the datatype, one representing a type alias based on the description and for each constructor of the datatype, a function that constructs an isomorphic value of the described type.
-The following paragraphs describes informally how each of these types of functions are generated from the perspective of the compiler.
+The following paragraphs describe informally how each of these types of functions are generated from the perspective of the compiler.
 The main part of the Haskell function that generates these functions can be seen in Appendix~\ref{cha:Generation function}.\footnote{Due to time constraints, the current version of the function only supports datatypes without parameters and indices.}
 
 \subsubsection{Generation of labels}
 \label{ssub:Generation of labels}
-The first part of what is generated is a value containing a list of all the constructor names of the target described datatype.
-Since all the constructor names are represented internally as strings by the compiler, this step simply involves creating a new clause of type \tttype{CEnum} and assigning it a list where all the constructor names are converted to string literals.
+The first part of what is generated is a value containing a list of all the constructor names of the target datatype.
+Since all the constructor names are represented internally as strings by the compiler, this step simply involves creating a new clause of type \tttype{CEnum} and then assign to it the Idris representation of a list where all the constructor names are converted to string literals.
 
 \subsubsection{Generation of descriptions}
 \label{ssub:Generation of descriptions}
@@ -1032,24 +1031,23 @@ The algorithm described in Algorithm~\ref{alg:gendescd} works by traversing the 
     \item Given a division of parameters and indices create a fitting type signature for the description
        \begin{enumerate}
          \item For parameters quantify those over the whole description value
-         \item Additionally quantify a \ttdec{CLabel} and dependent \tttype{Tag} value, to use for representing the description as one with constructor tags
-         \item For indices, they are first ``uncurried'' in a dependent pair, and then the whole dependent pair is passed to the tagged description type \tttype{TaggedDesc} as index
-         \item[] That is, the description for \tttype{D}\texttt{:}\texttt{(}\ttvar{x$_1$}\texttt{:}\ttvar{a$_1$}\texttt{)}\texttt{\ldots}\texttt{(}\ttvar{x$_n$}\texttt{:}\ttvar{a$_n$}\texttt{)}\texttt{~->~}\texttt{(}\ttvar{y$_1$}\texttt{:}\ttvar{i$_1$}\texttt{)}\texttt{\ldots}\texttt{(}\ttvar{y$_n$}\texttt{:}\ttvar{i$_n$}\texttt{)}\texttt{~->~}\tttype{Type} 
-           the signature of the description becomes \texttt{(}\ttvar{x$_1$}\texttt{:}\tttype{a$_1$}\texttt{)}\texttt{~->~}\texttt{\ldots}\texttt{~->~}\texttt{(}\ttvar{x$_n$}\texttt{:}\tttype{a$_n$}\texttt{)}\texttt{~->} \ttdec{TaggedDesc}~\texttt{(\textbf{labels_for}}~\tttype{D}\texttt{)}~\tttype{(}\ttvar{y$_1$}\texttt{:}\ttvar{i$_1$}\tttype{**}\texttt{\ldots}\tttype{**}\ttvar{y$_n$}\texttt{:}\ttvar{i$_n$}\tttype{)} where \ttvar{a$_j$} is the type of a parameter and \ttvar{i$_k$} is the type of an index
+         \item For indices, they are first ``uncurried'' in a dependent pair, and then the whole dependent pair is passed to the tagged description type \ttdec{TaggedDesc} as index
+         \item[*)] That is, for a datatype \tttype{D}\texttt{:}\texttt{(}\ttvar{x$_1$}\texttt{:}\ttvar{a$_1$}\texttt{)}\texttt{\ldots}\texttt{(}\ttvar{x$_n$}\texttt{:}\ttvar{a$_n$}\texttt{)}\texttt{~->~}\texttt{(}\ttvar{y$_1$}\texttt{:}\ttvar{i$_1$}\texttt{)}\texttt{\ldots}\texttt{(}\ttvar{y$_n$}\texttt{:}\ttvar{i$_n$}\texttt{)}\texttt{~->~}\tttype{Type} 
+           the signature of the corresponding description becomes \texttt{(}\ttvar{x$_1$}\texttt{:}\ttvar{a$_1$}\texttt{)}\texttt{~->~}\texttt{\ldots}\texttt{~->~}\texttt{(}\ttvar{x$_n$}\texttt{:}\ttvar{a$_n$}\texttt{)}\texttt{~->} \ttdec{TaggedDesc}~\texttt{(\textbf{labels\_for}}~\tttype{D}\texttt{)}~\tttype{(}\ttvar{y$_1$}\texttt{:}\ttvar{i$_1$}\tttype{**}\texttt{\ldots}\tttype{**}\ttvar{y$_n$}\texttt{:}\ttvar{i$_n$}\tttype{)} where \ttvar{a$_j$} is the type of a parameter and \ttvar{i$_k$} is the type of an index
        \end{enumerate}
-     \item Create a fitting clause to calculate the description where all parameters \ttvar{x$_1$}\texttt{\ldots}\ttvar{x$_n$} are given as arguments to that clause such that the right-hand side can access them
-     \item For the right-hand side calculate the $\pi$ value associated with description given the constructors and apply \ttdec{switchDesc} to that
+     \item Create a fitting clause for the description where all parameters \ttvar{x$_1$}\texttt{\ldots}\ttvar{x$_n$} are available as arguments
+     \item To assign a value to the clause, calculate the value conforming to the $\pi$ type for the description and apply \ttdec{switchDesc} to the result
        \begin{enumerate}
-         \item To calculate the $\pi$ value for datatype, iterate through the constructors such that for each constructor \ttvar{c$_j$}:
+         \item To calculate the value conforming to $\pi$ type for the datatype, iterate through the constructors such that for each constructor \ttvar{c$_j$}:
          \begin{enumerate}
            \item Create a new pair where the first component is the description for \ttvar{c$_j$} and the second component is the descriptions for the rest of the constructors ending with \ttconstructor{()}
            \item To calculate the description for \ttvar{c$_j$}, iterate through all its arguments:
            \begin{enumerate}
              \item If the argument is recursive, use the relevant constructor for recursion, either \ttconstructor{Rec} or \ttconstructor{HRec}, and apply it to the index values ``uncurried'' in a dependent pair
-             \item[] For example, for an argument \tttype{D}~\ttvar{y$_1$}~\texttt{\ldots}~\ttvar{y$_n$}\texttt{~->~\ldots} use \ttconstructor{Rec}~\ttconstructor{(}\ttvar{y$_1$}\ttconstructor{**}\texttt{\ldots}\ttconstructor{**}\ttvar{y$_n$}\ttconstructor{)}~\texttt{\ldots}
+             \item[] For example, for an argument \tttype{D}~\ttvar{x$_1$}~\texttt{\ldots}~\ttvar{x$_n$}~\ttvar{y$_1$}~\texttt{\ldots}~\ttvar{y$_n$}\texttt{~->~\ldots} use \ttconstructor{Rec}~\ttconstructor{(}\ttvar{y$_1$}\ttconstructor{**}\texttt{\ldots}\ttconstructor{**}\ttvar{y$_n$}\ttconstructor{)}~\texttt{\ldots}
              \item Otherwise if the argument is not recursive, use \ttconstructor{Arg}
              \item[] For example, for an argument \texttt{(}\ttvar{x}\texttt{:}\tttype{A}\texttt{)}\texttt{~->~\ldots} use \ttconstructor{Arg}~\tttype{A}~\texttt{(\textbackslash}\ttvar{x}\texttt{=>\ldots)}
-             \item Finally, when the resulting type is reached use \ttconstructor{Ret} applying it to the expected indices in the same way as when working with recursive arguments
+             \item Finally, when there are no arguments left use \ttconstructor{Ret} applying it to the expected indices similar how to it was done for recursive arguments
            \end{enumerate}
          \end{enumerate}
        \end{enumerate}
@@ -1064,12 +1062,12 @@ If the description is elaborated successfully, the user can then access it using
 \label{ssub:Generation of aliases}
 The generation of a type alias for a datatype \tttype{D} is simple.
 First, create a new declaration with the same name \ttdec{D} and type signature of the datatype. 
-Then, the result of \ttdec{D} is \ttdec{TData} applied to the description for that datatype \texttt{\textbf{desc\_for}}~\tttype{D}, adjusting for application of parameters and indices to fit the expected form.
+Then, the result of \ttdec{D} is \ttdec{TData} applied to the description for that datatype \texttt{\textbf{desc\_for}}~\tttype{D}, with the parameters and indices adjusted to fit the expected form.
 That is, the values of the parameters must be provided to the description to get a value of type \ttdec{TaggedDesc}~\texttt{(\textbf{labels\_for}}~\tttype{D}\texttt{))}~\tttype{(}\ttvar{y$_1$}\texttt{:}\ttvar{i$_1$}\tttype{**}\texttt{\ldots}\tttype{**}\ttvar{y$_n$}\texttt{:}\ttvar{i$_n$}\tttype{)}; then
 \ttdec{TData} is applied to that value and in addition the values of the indices which are packed together in a dependent pair yielding a value of type \tttype{Type} as required.
 
 Generating constructor aliases requires a bit more effort than with type aliases, but still follows a step-by-step process.
-The first thing is to enumerate all constructors, incrementally assigning each one a number (starting from \ttliteral{0}) which is used to calculate the corresponding \tttype{Tag} value.
+The first thing to do is to enumerate all constructors, incrementally assigning each one a number (starting from \ttliteral{0}) which is used to calculate the corresponding \tttype{Tag} value.
 Similarly to how type aliases were generated, a new declaration is then created for each constructor \ttconstructor{C} with the corresponding name \ttdec{C} and type signature.
 The only difference is that recursive arguments in the type signature are changed to use the described version of the datatype using the generated type alias.
 The result of \ttdec{D} is the application of \ttconstructor{Con} to an expression formed of right-nested dependent pairs that represent the synthesised version of the description for the datatype of \ttconstructor{C}.
@@ -1080,25 +1078,25 @@ and finally ending with the value \ttconstructor{Refl}.
 \label{sec:Parametricextensiontodescriptions}
 
 While it was possible to describe parametrised datatypes using the description presented in Chapter~\ref{cha:GenericProgramming}, it was not possible to distinguish
-between values of the parameter and other values after instantiating the parameter.
+between values of parameters and other kinds of values after instantiating the parameter.
 Therefore, some of the algorithms which dependent upon the knowledge of where a particular parameter is such as the functorial map,
 cannot be implemented in a generic fashion.
-Since it would be desirable to create such algorithms, a suitable description which has a built-in encoding of parameters must be created.
+Since it would be desirable to implement such algorithms, a suitable description which has a built-in encoding of parameters must be created.
 Section~\ref{sub:The parametricity of parameters} investigates some of the existing notions of what parameters are, and Section~\ref{sub:Parametrically extending the description} shows a new description which supports
 the parametric notion of parameters.
 
 \subsection{The parametricity of parameters}
 \label{sub:The parametricity of parameters}
 What is a parameter?
-In an environment with dependent types, such simple question can lead to many more answers than one would initially expect!
-While almost all agree on that the type \tttype{Vec}~\ttvar{a}~\ttvar{n} is parametrised by \ttvar{a} and indexed by \ttvar{n}, there has been seemingly less agreement on what a parameter is in general.
-The issue is probably due to the different things the different types of ``parameters'' are used for, and sometimes the different types overlap which makes the word \textit{parameter} overloaded.
-I will in the following sections present different definitions of what a parameter actually is, explain the rationale of their definition and show where they don't agree.
+In an environment with dependent types, such simple question can lead to more answers than bargained for.
+While almost all notions agree that the type \tttype{Vec}~\ttvar{a}~\ttvar{n} is parametrised by \ttvar{a} and indexed by \ttvar{n}, there has been seemingly less agreement on what a parameter is in general.
+The issue is probably due to the different things the different kinds of parameters are used for, and sometimes the different types overlap which overloads the word parameter.
+I will in the following sections present different definitions of what a parameter actually is, explain the rationale of their definitions and show where they don't agree.
 
 \subsubsection{Parameters as eliminator quantifiers}
 \label{ssub:Parameters as eliminator quantifiers}
-One notion of a parameter is presented by \textcite{Dybjer97inductivefamilies}, and is the one that is actually implemented in Idris\,\autocite{brady2013idris}.
-The notion is defined in terms of how a parameter appears in the elimination rule for a particular datatype, where it is expected that parameters appear first such that they are quantified over the complete elimination rule.
+One notion of a parameter is the one presented by \textcite{Dybjer97inductivefamilies}, and implemented in Idris\,\autocite{brady2013idris}.
+The notion is defined in terms of how a parameter appears in the elimination rule for a particular datatype, where it is expected that parameters appear first in the type signature such that they are quantified over the complete elimination rule.
 
 \begin{figure}[ht]
 \begin{center}
@@ -1109,17 +1107,17 @@ The notion is defined in terms of how a parameter appears in the elimination rul
 \end{figure}
 
 Since parameters are quantified over the elimination rule, it is ensured that they are constant relative to the property to be eliminated, \textit{i.e.}, they do not change depending on the value that may be provided as scrutinee.
-Figure~\ref{fig:vecelim} shows the elimination rule for \tttype{Vec}, where it can be observed that \ttvar{a} is quantified over the whole expression and thus parameteric,
+Figure~\ref{fig:vecelim} shows the elimination rule for \tttype{Vec}, where it can be observed that \ttvar{a} is quantified over the whole expression and thus considered to be a parameter,
 while \ttvar{n} changes in the property to be eliminated \ttvar{prop} and is therefore considered an index.
 
-A restriction that is necessary to ensure that parameters are quantified correctly in the elimination rule, is that the parameter should appear uniformly in all of the constructors result type or recursive arguments.
-This rules out data structures such as the one presented in Figure~\ref{fig:nestedlist} to be considered parametric in this system, since the argument to the recursive argument of \ttconstructor{Cons} is different
+A restriction that is necessary to ensure that parameters are quantified correctly in the elimination rule, is that the parameter should appear uniformly in all of the constructors result type and recursive arguments.
+This rules out data structures such as the one presented in Figure~\ref{fig:nestedlist} to be considered having any parameters in this system, since the argument to the recursive argument of \ttconstructor{Cons} is different
 than in the rest of the structure.
 
 \subsubsection{Parameters as terms with parametricity}
 \label{ssub:Parameters as terms with parametricity}
 Another notion of a parameter which is presented by \textcite{bernardy2010parametricity}, is that it is a type argument which exhibits parametricity\,\autocite{DBLP:conf/ifip/Reynolds83,Wadler89theoremsfor}.
-A type argument exhibits parametricity if the same relations in the datatype is satisfied independently of which value is provided; that is, one should not be able to inspect or constrain the value of a parameter (using e.g. propositional equality).
+A type argument exhibits parametricity if the same relations in the datatype is satisfied independently of which value is provided; that is, one should not be able to inspect or constrain the value of a parameter (\textit{e.g.}, using propositional equality).
 Figure~\ref{fig:nestedlist} shows a nested datatype\,\autocite{bird1998nested} \tttype{NList}, which is parameteric even though \ttvar{a} does not appear uniformly in the datatype declaration.
 The reason that \ttvar{a} is still considered parameteric, is because the recursive argument uses \textit{functorial composition}.
 With functorial composition, recursive arguments can use parameters in a non-uniform fashion as long as it does not change parametericity and preserves the expected relations.
@@ -1139,8 +1137,8 @@ If constraints were made based on the type argument of the datatype, it wouldn't
 \subsubsection{Parameters as uniform indices}
 \label{ssub:Parameters as uniform indices}
 The last notion of a parameter is the one used in Agda\,\autocite{norell2009dependently} which only requires that parameters are uniform in the resulting type of constructors.
-This allows the creation of more expressive datatypes, and can encompass both parametric parameters and parameters which are quantified uniformly over eliminators however it does not ensure either of these properties.
-While this provides more freedom for the user to decide how to structure datatypes, it makes it harder to see what the correspondence there is between a parameter and the semantic properties it imposes.
+This allows the creation of more expressive datatypes, and can encompass both parametric parameters and parameters which are quantified uniformly over eliminators; however, it does not ensure either of these properties.
+While this provides more freedom for the user to decide how to structure datatypes, it makes it harder to see what correspondence there is between a parameter and the semantic properties it imposes.
 
 \begin{figure}[ht]
 \begin{center}
@@ -1151,7 +1149,7 @@ While this provides more freedom for the user to decide how to structure datatyp
 \end{figure}
 
 For example, Figure~\ref{fig:altvecdecl} shows a datatype where both \ttvar{a} and \ttvar{n} are uniform in the result and which could accepted as a \citeauthor{norell2009dependently}-style parameter.
-However, the arguments in this definition are neither parametric nor uniform and therefore does not fit into another definition of parameters.
+However, the arguments in this definition are neither parametric nor uniform and therefore does not fit into the other notions of parameters.
 
 
 \subsection{Parametrically extending the description}
@@ -1176,7 +1174,7 @@ an encoding that is conservative in a way that disallows non-parametric use of p
 Figure~\ref{fig:pardesc} presents a description
 \footnote{\ttconstructor{HRec} is omitted for presentation purposes, but can be added in the same style as presented in Chapter~\ref{cha:GenericProgramming}} 
 akin to the one presented in Figure~\ref{fig:simpldescdatatype}
-except a new constructor \ttconstructor{Par} which is inspired by an encoding in \textcite{benke2003universes} is added.
+except a new constructor \ttconstructor{Par}---inspired by an encoding in \textcite{benke2003universes}---is added.
 The constructor \ttconstructor{Par} represents an argument of the provided parameter in the datatype to be described.
 
 \begin{figure}[ht]
@@ -1187,19 +1185,18 @@ The constructor \ttconstructor{Par} represents an argument of the provided param
 \label{fig:parsynth}
 \end{figure}
 
-In order, to convert the newly presented description to an ordinary datatype a suitable \ttdec{Synthesise} function is declared.
-The function looks mostly the same as the one presented in Chapter~\ref{cha:GenericProgramming}, the described type is now of type \tttype{Type}\texttt{ -> }\tttype{Type}
+In order, to convert the newly presented description to an ordinary datatype a suitable \ttdec{SynthesisePar} function is declared.
+The function looks mostly the same as the one presented in Chapter~\ref{cha:GenericProgramming}, however the described type is now of type \tttype{Type}\texttt{ -> }\tttype{Type}
 and an additional clause for \ttconstructor{Par}.
 The clause for \ttconstructor{Par} produces a dependent pair similar to most other clauses, where the first component has to be an argument of the provided parameter as expected
 and the second component is the type synthesised from the rest of the description.
 Since it is not possible to dependent on the type nor values of parameters in the presented encoding, parametericity is ensured by construction.
-However, some expression power is lost in return since it is not possible to have complex arguments of other types that uses these parameters.
+In return, some expression power is lost since it is not possible to have complex arguments that uses these parameters.
 
 \subsubsection{Supporting functorial composition}
 \label{ssub:Supporting functorial composition}
-In Section~\ref{sub:The parametricity of parameters} it was stated that parameters in nested datatypes were parameteric
-because they were composed in a functorial fashion.
-It would be therefore desirable to be add such ability to the presented description, since it would increase the level of expression.
+In Section~\ref{sub:The parametricity of parameters} it was stated that parameters in nested datatypes were parametric because they were composed in a functorial fashion.
+Therefore, it would be desirable to add such ability to the presented description datatype and thereby increasing the level of expression.
 
 \begin{figure}[ht]
 \begin{center}
@@ -1209,12 +1206,12 @@ It would be therefore desirable to be add such ability to the presented descript
 \label{fig:pardescex}
 \end{figure}
 
-Figure~\ref{fig:pardescex} shows the addition of the \ttconstructor{CompRec} which represents a nested recursive argument of a datatype.
+Figure~\ref{fig:pardescex} shows the addition of the constructor \ttconstructor{CompRec} which represents a nested recursive argument of a datatype.
 The first argument of the constructor \ttvar{f} is the type to be functorially composed onto the parameter, and must therefore be a function that accepts the parameter
 and returns a type.
 To ensure that \ttvar{f} acts functorially, an additional argument \ttvar{ffunctor} must be given.
-This variable \ttvar{ffunctor} provides the \tttype{Functor} type class instance for \ttvar{f}, and the argument is written such way that it tries to implicitly resolve the instance via the built-in type class resolution mechanism.
-Finally the last argument is the rest of the description for the datatype described.
+This variable \ttvar{ffunctor} provides the \tttype{Functor} type class instance for \ttvar{f}, and uses Idris built-in type resolution mechanism to automatically find that instance.
+Finally the last argument is the rest of the description for the datatype to be described.
 
 \begin{figure}[ht]
 \begin{center}
@@ -1226,7 +1223,7 @@ Finally the last argument is the rest of the description for the datatype descri
 
 Converting \ttconstructor{CompRec} to an ordinary type is mostly similar to converting ordinary recursive arguments \ttconstructor{Rec} (see Figure~\ref{fig:parsynthex}).
 The only difference is that \ttvar{f} must be applied to the parameter first before applying the described version of the type.
-It is perhaps clearest here why it is called functorial composition, since \ttvar{x}~\texttt{(}\ttvar{f}~\ttvar{a}\texttt{)} is equivalent to \texttt{(}\ttvar{x}~\texttt{.}~\ttvar{f}\texttt{)}~\ttvar{a} which uses
+Here, it is perhaps clearest why such operation is called functorial composition, since \ttvar{x}~\texttt{(}\ttvar{f}~\ttvar{a}\texttt{)} is equivalent to \texttt{(}\ttvar{x}~\texttt{.}~\ttvar{f}\texttt{)}~\ttvar{a} which uses
 the ordinary function composition operator ``\texttt{.}''.
 
 \begin{figure}[ht]
@@ -1241,7 +1238,7 @@ As an example of a description for a nested datatype, please take a look at Figu
 The figure shows the description for \tttype{NList} from Figure~\ref{fig:nestedlist}, and the most interesting
 part is the application of \ttconstructor{CompRec}.
 In this context it is applied to a functor \ttdec{PairP}, which represents the same type as \texttt{\textbackslash}\ttvar{p}\texttt{=>}\tttype{(}\ttvar{p}\tttype{,}\ttvar{p}\tttype{)} from Section~\ref{sub:The parametricity of parameters}.
-To typecheck this application of \ttconstructor{CompRec} there must be a \tttype{Functor} instance for \ttdec{PairP}, however as can be observed in the figure it doesn't have to be provided explicitly.
+To type check this application of \ttconstructor{CompRec} there must be a \tttype{Functor} instance for \ttdec{PairP}, however it can be left out since Idris can resolve it implicitly.
 
 \subsubsection{Conversion to ordinary descriptions}
 \label{ssub:Conversion to ordinary descriptions}
@@ -1270,6 +1267,9 @@ The only thing that adds complexity is that the presence or absence of parameter
 \label{sub:Any practical type theory permits forgetting unused dependencies}
 
 
+\subsection{An annotation system for functional generic programming}
+\label{sub:An annotation system for functional generic programming}
+
 \chapter{Practical examples}
 \label{cha:PracticalExamples}
 
@@ -1290,19 +1290,18 @@ For example, to pretty a list of items it is required that there is a way to pri
 \label{fig:constrclass}
 \end{figure}
 
-Figure~\ref{fig:constrclass} shows a function \ttdec{Constraints1} which can be used to calculate type class constraints
-for a type class \ttvar{class} that takes a simple parameter of type \tttype{Type}, given a description of type \tttype{Desc}.
-The function works mostly by iterating over the description type and specifies that each external data member with description \ttconstructor{Arg}
-must have an implementation of the provided type class.
+Figure~\ref{fig:constrclass} shows a function \ttdec{Constraints1} which can be used to calculate type class constraints needed to have an instance of a type class \ttvar{class} (which takes a simple parameter of type \tttype{Type}) for a datatype \tttype{D}, given the description for \tttype{D}.
+The function works by iterating over the description type and specifies that each external data member with description \ttconstructor{Arg}
+must have an instance of the provided type class.
 The only other interesting case is \ttconstructor{HRec}, where the false type \tttype{\_|\_} is required.
 The false type makes it impossible to fulfil the constraints for a datatype using \ttconstructor{HRec}, and is used intentionally to avoid implementing algorithms using descriptions of that form.
-This is because it is generally hard to implement arbitrary algorithms like decidable equality on functions which \ttconstructor{HRec} symbolises.
+This is because it is generally hard to implement arbitrary algorithms like decidable equality on functions which \ttconstructor{HRec} is a representative of.
 
 \subsection{Pretty printing}
 \label{sub:Pretty printing}
 One of the most commonly used and automatically derived operations on datatypes is pretty printing.
-Therefore, this function suits well as an introductory example on how a generic algorithm using the presented implementation of description
-look like.
+Therefore, this function suits well as an introductory example on how a generic algorithm using the presented implementation of descriptions
+looks like.
 
 \begin{figure}[ht]
 \begin{center}
@@ -1313,7 +1312,7 @@ look like.
 \end{figure}
 
 The algorithm for generic pretty printing \ttdec{gshow} is shown in Figure~\ref{fig:showgen}, and follows well the informal algorithm presented in Example~\ref{exmp:prettyprint}.
-The type signature of the \ttdec{gshow} might look a bit daunting at first, but the only major difference from ordinary pretty printing is that it requires not just data but also the associated description
+The type signature of the \ttdec{gshow} might look a bit daunting at first, but the only major difference from ordinary pretty printing is that it requires not just the data but also the associated description
 and some constraints on its subcomponents to be able to pretty print them.
 The function first prints the name of the input constructor, and then calls a function \ttdec{gshowd} which pretty prints the individual constructor arguments according to the provided description.
 
@@ -1326,9 +1325,9 @@ The function first prints the name of the input constructor, and then calls a fu
 \end{figure}
 
 The function \ttdec{gshowd} shown in Figure~\ref{fig:showgendesc}, iterates through the arguments of the input constructor.
-If there we reach the end of the constructor (having description \ttconstructor{Ret}), the empty string is printed.
+If the end of the constructor (having description \ttconstructor{Ret}) is reached, the empty string is printed.
 If it is a recursive argument, the generic show \ttdec{gshow} is called again with the description for the whole datatype, parenthesised if necessary; then the rest of the constructor arguments are printed.
-Otherwise if it is an ordinary argument, the associated \ttdec{show} method is called using the instance provided from the constraints, again parenthesised if necessary, and then the rest of the of the constructor arguments are printed.
+Otherwise if it is an ordinary argument, the associated \ttdec{show} method is called using the instance provided from the constraints, again parenthesised if necessary, and then the rest of the constructor arguments are printed.
 Finally, if a higher-order recursive argument is met it is dismissed using \ttdec{absurd} since it should not be possible to reach this case because the constraints require a value of type \tttype{\_|\_}.
 
 
@@ -1351,9 +1350,10 @@ The \tttype{Show} constraints for \ttdec{Pair} are easy to create, and are almos
 In fact calculating the constraints for other single-parameter type classes have almost the exact same structure.
 The issues however lies with that Idris cannot do type class resolution for any type class \ttvar{c}, and therefore it is impossible to make
 a function that calculates these constraints (since it would not be able to type check).
-There could be two solution to such issue: one would be to create a macro system for Idris which only type checks the expression after it is instantiated with the right type class, and another
+
+There could be two solutions to such issue: one would be to create a macro system for Idris which only type checks the expression after it is instantiated with the right type class, and another
 would be to create a suitable tactic that calculates such constraints at compile time when needed.
-Since these solutions would require some effort which is beyond the scope of this project, they are considered to be future work.
+Since these solutions would require considerable effort beyond the scope of this project, implementing any of them is considered to be future work.
 
 \begin{figure}[ht]
 \begin{center}
@@ -1365,8 +1365,8 @@ Since these solutions would require some effort which is beyond the scope of thi
 
 \subsection{Decidable equality}
 \label{sub:Decidable equality}
-Something which is a bit more interesting to do generically than pretty printing is decidable equality, since that usually
-requires handling a quadratic number of cases relative to number of constructors and \textbf{in addition} writing a significant number of associated lemmas.
+Something which is a bit more interesting to do generically is decidable equality, since that usually
+requires handling a quadratic number of cases relative to the count of constructors, in addition to writing a significant number of associated lemmas.
 However, before implementing decidable equality for described types, I will start by implementing it for \tttype{Tag} to make it easier for the user to satisfy
 the necessary constraints.
 
@@ -1391,8 +1391,7 @@ The first necessary lemma \ttdec{lemma\_tz\_not\_ts} is shown in Figure~\ref{fig
 \end{figure}
 
 The second necessary lemma to prove is the injectivity of the constructor \ttconstructor{TS} (see Figure~\ref{fig:taglem2}).
-That is, if given two values of constructor \ttconstructor{TS} which are equal, then it is possible to show that their inner \tttype{Tag} arguments
-are equal.
+That is, if given two values of constructor \ttconstructor{TS} which are equal, then it is possible to show that their inner arguments of type \tttype{Tag} are equal.
 
 \begin{figure}[ht]
 \begin{center}
@@ -1480,8 +1479,8 @@ The clause for \ttdec{gdecEqd} in the case of \ttconstructor{Ret} is shown in Fi
 \end{figure}
 
 Probably the most interesting case is shown in Figure~\ref{fig:deceqgendesc2} and is when it is an argument which is described (\textit{i.e.}, \ttconstructor{Arg}).
-There are two things which are needed to be checked, the equality of argument values themselves and the equality of the rest of the described type.
-To the check if that the values of the provided arguments are equal, the provided type class instance from the constraints is used.
+There are two things which needs to be checked, the equality of argument values themselves and the equality of the rest of the described type.
+To check if the values of the provided arguments are equal, \ttdec{decEq} is called with the provided type class instance from the constraints \ttvar{deceqa}.
 If the values are equal then it is possible to proceed checking the rest of the described type, otherwise the \ttdec{lemma\_fst\_injective} lemma is used to compose a counter-proof.
 If the rest of the described type is equal then an equality proof can be provided, otherwise the \ttdec{lemma\_snd\_injective} lemma is used to compose a counter-proof.
 
@@ -1536,12 +1535,12 @@ mapping a described type is simply the same as mapping its individual data compo
 \end{figure}
 
 The function used to map a function on the individual components \ttdec{gmappd} is presented in Figure~\ref{fig:mapgendesc}.
-The implementation is straightforward and mostly iterates through the structure applying the generic mapping functions where possible, and the only two interesting cases is the one for value of the parameter type
+The implementation is straightforward and mostly iterates through the structure applying the generic mapping functions where possible, and the only two interesting cases are the ones for the value of the parameter type
 and for the functorially composed recursion.
 When a parameter value (described by \ttconstructor{Par}) is met, then the function to mapped \ttvar{f} is simply applied to that parameter and the mapping continues on the rest of the described type.
 For the functorially composed recursive arguments (described by \ttconstructor{CompRec}), there are a couple of steps to be taken.
 First, a mapping function \ttdec{map}~\texttt{@\{}\ttvar{mapc}\texttt{\}}~\ttvar{f} for the elements of the composed type is created by calling the associated \ttvar{Functor} instance \ttvar{mapc} for the composed functor \ttvar{g}, which then has the type \ttvar{g}~\ttvar{a}~\texttt{->}~\ttvar{g}~\ttvar{b}.
-Thereafter, this mapping function has the right to be provided to the recursive call of \ttdec{gmapp} and the recursive constructor argument can be mapped.
+Thereafter, this mapping function has the right type to be provided to the recursive call of \ttdec{gmapp} and the recursive constructor argument can be mapped.
 Finally, it is possible to map the rest of the described type.
 
 \begin{figure}[ht]
@@ -1558,7 +1557,7 @@ Finally, it is possible to map the rest of the described type.
 \subsection{Generic tag testing}
 \label{sub:Generic tag testing}
 One common pattern in the Idris standard library is to check whether a variable is of a particular constructor type, \textit{e.g.},
-to get the \ttdec{head} of a list \ttvar{xs} then \ttdec{isCons}~\ttvar{xs} must be true and to use convert a \tttype{Fin} to an integer using \ttdec{fromInteger} then \ttdec{isJust} is used to ensure that the conversion is safe.
+to get the \ttdec{head} of a list \ttvar{xs} then \ttdec{isCons}~\ttvar{xs} must be true and to convert a \tttype{Fin} to an integer using \ttdec{fromInteger} then \ttdec{isJust} is used to ensure that the conversion is safe.
 Such use-pattern normally requires setting up a new function for each particular constructor, however with the power of generic programming such pattern can be easily generalised into a function.
 
 \begin{figure}[ht]
@@ -1594,23 +1593,212 @@ If the condition provided matches the first constructor of the datatype that had
 
 \section{Scrapping your dependently-typed boilerplate is hard}
 \label{sec:Scrappingyourdependently-typedboilerplateishard}
-\textit{A version of the Uniplate library for Idris based on} \url{http://community.haskell.org/~ndm/uniplate/} \textit{and} \url{http://www-ps.informatik.uni-kiel.de/~sebf/projects/traversal.html} \textit{.
-This is useful for traversing structures in a generic fashion and especially when dealing with small changes in large data structures (such as compiler ADTs)}
+%\textit{A version of the Uniplate library for Idris based on} \url{http://community.haskell.org/~ndm/uniplate/} \textit{and} \url{http://www-ps.informatik.uni-kiel.de/~sebf/projects/traversal.html} \textit{.
+%This is useful for traversing structures in a generic fashion and especially when dealing with small changes in large data structures (such as compiler ADTs)}
+The original purpose of this section was to present how I planned to implement a Uniplate-style\,\autocite{mitchell2007uniform} framework, as an example of how diverse the presented generic encoding is.
+However, I found out while trying to implement the framework that there was no straightforward solution in a dependent types setting.
+Instead, I will dedicate this section to presenting an informal explanation of the challenges that arise when trying to implement such framework.
+Please note that the Uniplate-related figures presented in this section are translated from Haskell to Idris.
+
+\subsection{Uniplate in 5 minutes}
+\label{sub:Uniplate in 5 minutes}
+
+The goal of Uniplate and other Scrap Your Boilerplate-style\,\autocite{lammel2003scrap} frameworks is to present practical operations that permit generic traversal of datatypes.
+Specifically, these types of frameworks provide operations that are type directed, instead of focusing on particular data elements.
+For example, a Uniplate operation could be to extract all expressions from some given input statement, compared to ordinary functions which would focus on working with particular elements of a statement such as the condition expression and two branches of an \texttt{\textbf{if}}-statement.
+This allows many operations which often need to traverse deep nested structures such as ASTs, to be succinctly written since only the necessary parts can be referred to.
+
+While Uniplate provides a plethora of functions, there are two particularly interesting ones whose type signature is shown in Figure~\ref{fig:uniplatefunc}.
+The function \ttdec{universeBi} allows the extraction of all elements of a target type \ttvar{to}, from input data of the source type \ttvar{from}.
+Complementarily, the function \ttdec{transformBi} allows lifting of a function that homogeneously maps elements of a target type \ttvar{to}, to a function that homogeneously maps elements of the source type \ttvar{from}.
+The type signature of these functions require that there exists an instance of \tttype{Biplate} from the source type \tttype{from} to the target type \tttype{to}.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/UniplateFunctions.png}
+\end{center}
+\caption{A couple of the most interesting functions for Uniplate}
+\label{fig:uniplatefunc}
+\end{figure}
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/UniplateClass.png}
+\end{center}
+\caption{The \tttype{Biplate} type class}
+\label{fig:uniplateclass}
+\end{figure}
+
+The interface for the \tttype{Biplate} type class is presented in Figure~\ref{fig:uniplateclass}.
+One constraint on the \tttype{Biplate} type class is that the target type \ttvar{to} must implement another type class \tttype{Uniplate}.
+The type class \tttype{Uniplate} provides a function \ttdec{uniplate} which is similar to the \ttdec{biplate} function that is provided by \tttype{Biplate}
+except the target datatype \ttvar{to} and the source datatype \ttvar{from} are restricted to be the same.
+The signature of the \ttdec{biplate} function states that given input data of the source type \ttvar{from},
+then it should be possible to extract a list of the elements of the target type \ttvar{to}, and given a list of new values with the same length it should be possible to create new data which conforms to the source type \ttvar{from}.
+The whole interface provides a simple way to retrieve and create new elements for simple datatypes.
+
+\subsubsection{Example: Modelling blog posts}
+\label{ssub:Example: Modelling blog posts}
+One place where something like Uniplate could be useful is when working with structured data models.
+For example, Figure~\ref{fig:uniplateexmpdata} shows list of datatype declarations which represent a simplified model of blog posts.
+In that model a blog post is either a single blog post with a title and a publication date, or a summarising blog post that aggregates a series of other posts.
+Therefore in this model, blog posts form a tree-like structure.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/UniplateExampleData.png}
+\end{center}
+\caption{A simplified model over blog-posts}
+\label{fig:uniplateexmpdata}
+\end{figure}
+
+Figure~\ref{fig:uniplateexmpops} shows a couple of interesting operations on the blog post model, which utilises the Uniplate functions from Figure~\ref{fig:uniplatefunc}.
+The function \ttdec{timestamps} would extract all creation dates that exist in the input blog post using \ttdec{universeBi}, no matter how aggregated the blog posts are.
+Similarly, the function \ttdec{capitaliseTitles} capitalises all the titles of the input blog posts, by applying \ttdec{transformBi} on a function \ttdec{capitalise} of type \tttype{Title}\texttt{~->~}\tttype{Title}.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/UniplateExampleOperations.png}
+\end{center}
+\caption{Interesting operations using Uniplate on blog-post model}
+\label{fig:uniplateexmpops}
+\end{figure}
+
+Usually, the \tttype{Biplate} type class can automatically be derived in Haskell if a datatype already supports the necessary generic encoding; that is, it has instances for the \tttype{Typeable} and \tttype{Data} type classes, which can also be derived.
+However, it is also possible to manually implement the necessary instances, and an example of an instance for \tttype{Biplate}~\tttype{Post}~\tttype{Timestamp} is shown in Figure~\ref{fig:uniplatexmpinst}.
+Since the \tttype{Post} datatype has two constructors, there are two cases to handle.
+The case for the constructor \ttconstructor{Single} simply extracts the timestamp and returns it as a singleton list, and when to reconstruct the datatype the constructor \ttconstructor{Single} is used
+on the same title as given originally and the newly provided timestamp.
+Since \ttconstructor{Aggregate} doesn't contain any timestamps nothing is extracted, and when it is time to reconstruct the same element as the input is returned.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/UniplateInstance.png}
+\end{center}
+\caption{An instance of \tttype{Biplate} for working with timestamps in blog posts}
+\label{fig:uniplatexmpinst}
+\end{figure}
+
+
+
+\subsection{Automatic deriving}
+\label{sub:Automatic deriving}
+As mentioned in Section~\ref{sub:Uniplate in 5 minutes}, one of the more useful features is the ability to automatically derive instances for the \tttype{Uniplate} and \tttype{Biplate} type classes.
+However, as I will present in this section, such thing is not completely obvious to do correctly in a setting with dependent types.
+In fact, the Uniplate documentation\,\autocite{mitchell2014uniplate} already warns that creating instances (even manually, not just by deriving) for polymorphic types could already produce
+incorrect results:
+
+\blockquote{
+When defining polymorphic instances, be carefully to mention all potential children.
+Consider \tttype{Biplate} \tttype{Int} \tttype{(Int,}~\ttvar{a}\tttype{)} - this instance cannot be correct because it will fail to return both \tttype{Int} values on \tttype{(Int, Int)}.
+There are some legitimate polymorphic instances, such as \tttype{Biplate}~\ttvar{a}~\tttype{[}\ttvar{a}\tttype{]} and \tttype{Biplate}~\ttvar{a}~\ttvar{a}, but take care to avoid overlapping instances.}
+
+\subsubsection{The type casing challenge}
+\label{ssub:The type casing challenge}
+
+The first challenge that arises when needing to generically derive instances, is that pattern matching on types is needed in order to identify which elements belong to the target type.
+However, Idris does not permit pattern matching on types for two reasons: it would break parametricity and it would significantly hurt runtime performance.
+
+Therefore, something like \tttype{Typeable} for Haskell is needed in order to recover type information at compile time.
+Traditionally, the Universe pattern\,\autocite{altenkirch2007generic} is used in dependently typed languages as an analogue to provide an internal encoding of a limited set of types that can be matched on.
+This is done by having a set of constructors called \textit{codes} in some type \tttype{U} to represent these types, and then an interpretation function \ttdec{El} which takes elements of \tttype{U} and translates them to actual types.
+However, this can be problematic when types need to depend on values, since dependencies must be encoded as functions from interpreted codes to other codes.
+Since it is not possible to patten match the interpretation of codes which are actual types, it is not usually possible to recover the correct form of the type information at runtime.
+In summary, the author has not been able to find a good encoding for an external way to do type casing for dependent types, and there are both proof theoretic and performance-related problems if such system is included in the core language.
+
+\subsubsection{Distinguishing between the kind of data}
+\label{ssub:Distinguishing between the kind of data}
+Assuming it was possible to have a way to do something similar to type casing, there are still a challenge left regarding automatic deriving of
+relevant Uniplate instances.
+In dependently-typed programming languages, terms are not just used to contain data used at runtime, but sometimes they also contain data
+that is needed at type level such as when indexing datatypes.
+The challenge occurs when the two kinds of data intermix in datatypes when trying to derive the relevant \tttype{Biplate} and \tttype{Uniplate} instances.
+
+For example, in the type \tttype{Vec}~\tttype{Nat}~\ttvar{n} there are natural numbers used both as elements and as indeces of the datatype.
+However, it is not generally possible to distinguish between the \tttype{Nat} element that is used as index and the \tttype{Nat} member elements, and when trying to extract all natural numbers in order to implement \tttype{Biplate}~\texttt{(}\tttype{Vec Nat}~\ttvar{n}\texttt{)}~\tttype{Nat} it is hard to only get the relevant member data.
+Worse yet, it is not possible to reconstruct new data of type \tttype{Vec} if given an arbitrary \tttype{Nat} which should act as index, since that wouldn't necessarily fit the definition of the datatype.
+
+One idea would be to try to completely avoid any data members which appear at type level, however such solution cannot be generally applied.
+As an example see Figure~\ref{fig:olist} which presents a list which enforces a less-than ordering on the elements.
+In such datatype, there is no difference between the data members and the members used as indices.
+If the data members were omitted, then there is nothing interesting left to operate on.
+In summary, it is hard to do automatic deriving for any arbitrary indexed datatype and therefore they must be created manually in applicable cases
+if they are needed to be ensured correct.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/UniplateOList.png}
+\end{center}
+\caption{A datatype describing a list with ordered elements}
+\label{fig:olist}
+\end{figure}
+
+
+\subsection{Generic traversal}
+\label{sub:Generictraversal}
+Even if assuming that there somehow are relevant \tttype{Biplate} instance for an indexed datatype, there would still be challenges with regards to generic querying and transformation.
+If one examines the type signature of the generic traversal functions \ttdec{universeBi} and \ttdec{transformBi}, one can see that they force types to be monomorphic.
+While there are many interesting operations that can be achieved on a non-indexed type like \tttype{List}~\tttype{Nat}, the available operations to be done on a monomorphic indexed type like \tttype{Vec}~\tttype{Nat}~\ttconstructor{Z} are far less interesting.
+
+Therefore it is desirable that the generic traversal functions can have polymorphic indices which can change values such that they fit the relevant contained data.
+Figure~\ref{fig:uniplatefuncimp} shows an updated version of these operations which allow individual elements to have different indices,
+and transformations to change the indices.
+The changes require a minor update to the \tttype{Biplate} interface such that the target type \ttvar{to} has type \ttvar{ix}~->~\tttype{Type} instead of just \tttype{Type}.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/UniplateFunctionsImproved.png}
+\end{center}
+\caption{Updating Uniplate functions to allow changes in the index of the target type}
+\label{fig:uniplatefuncimp}
+\end{figure}
+
+Given the update interface and a fitting implementation of \tttype{Biplate}, \ttdec{universeBi} function should work adequately.
+However, there is something not completely right about the \ttdec{transformBi} function; surely, it should not be possible to change arbitrary indices of a datatype?
+Unfortunately no, if such function was allowed the type system would be inconsistent since it would be possible to break datatype invariants.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/UniplateTransformCounterProof.png}
+\end{center}
+\caption{An example datatype that contains two vectors, where one has exactly one more element}
+\label{fig:twovec}
+\end{figure}
+
+For example, Figure~\ref{fig:twovec} presents a datatype which contains two vector and enforces the constraint that one of the vectors must have exactly one element more than the other.
+Figure~\ref{fig:twovecfunc} presents a simple function that appends a given input vector to itself.
+A problem occurs if a user tries to call \ttdec{transformBi}~\ttdec{double}~\ttvar{xs}, since such function would try to double the size of all vectors in the input data \ttvar{xs}.
+The result would be that both vectors would have twice the length, thus making one of the vectors having two elements more than the other breaking the invariant of the datatype.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/UniplateTransformCounterProofFunc.png}
+\end{center}
+\caption{A function that appends a vector to itself}
+\label{fig:twovecfunc}
+\end{figure}
+
+One suggestion to mitigate the problem would be somehow if it was possible to separate actual data from constraints in the transformation, and then check that the resulting structure still conforms to the necessary invariants.
+However, such solution is hard to generalise into a proper type signature and also it might not be apparent how such constraints could be formed.
+For example the \tttype{OList} shown in Figure~\ref{fig:olist} seems in fact to be the best way to enforce an ordering on list elements.
+
 
 \chapter{Optimising Idris for flight}
 \label{cha:OptimizingIdrisforFlight}
 
-\section{Specialising constructors for specific types}
-\label{sec:SpecialisingConstructorsforSpecificTypes}
-\textit{How generalized constructors of described types, are specialised as ordinary data structures.}
+\section{Analysing the encoding overhead}
+\label{sec:Analysingtheencodingoverhead}
 
-\section{Online erasure of unused arguments}
-\label{sec:OnlineErasureofUnusedArguments}
-\textit{How some type infromation is to be erased at compile time to reduce elaboration overhead. Very hypothetical.}
+\section{Preparing descriptions for erasure}
+\label{sec:Preparingdescriptionsforerasure}
 
-\section{Static initialization of generic functions}
-\label{sec:StaticInitializationofGenericFunctions}
-\textit{How algorithms that are dependent on the generic structure of a datatype are optimised. Discuss benefits of having a JIT/Profiling information for future work.}
+\section{Sketching out an algorithm for specialising described types}
+\label{sec:Sketchingoutanalgorithmforspecialisingdescribedtypes}
+
+%\section{Challenges and recommendations in improving elaboration time}
+%\label{sec:Challengesandrecommendationsinimprovingelaborationtime}
+
+
 
 \chapter{Evaluation}
 \label{cha:Evaluation}
