@@ -654,10 +654,10 @@ Now, \ttdec{DescDesc} can be type checked without any issues and \textit{levitat
 
 \section{Ensuring tagging of descriptions}
 \label{sec:Ensuring tagging of descriptions}
-The plain description type \tttype{Desc} accepts descriptions of any form, which can limit how some algorithms are written.
-For example, it might be useful to pretty print the constructor tags different from data elements, and therefore it would be nice if the type system ensured
+The plain description type \tttype{Desc} accepts descriptions of any form, something which can limit how some algorithms are written.
+For example, it might be useful to pretty print the constructor tags differently from the constructor arguments, and therefore it would be nice if the type system ensured
 that it was possible to know where the tags were.
-Similarly, if one needs to extend the number of constructors in a described type, it is necessary to know how the tagging is made.
+Similarly, if one needs to extend the number of constructors in a described type, it is necessary to know how tags are used.
 
 \begin{figure}[ht]
 \begin{center}
@@ -669,7 +669,7 @@ Similarly, if one needs to extend the number of constructors in a described type
 
 \textcite{Dagand2013acosmology} suggests that it is possible to create a type representing tagged descriptions while keeping
 the same level of expression (see Figure~\ref{fig:tagdesc} for an inspired implementation).
-The type \ttdec{TaggedDesc} represents the type of functions from tags to descriptions, which is exactly the same as what the function \ttdec{switchDesc} returns.
+The type \ttdec{TaggedDesc} represents the type of functions from tags to descriptions, which is exactly the result type of function \ttdec{switchDesc}.
 
 \begin{figure}[ht]
 \begin{center}
@@ -680,12 +680,12 @@ The type \ttdec{TaggedDesc} represents the type of functions from tags to descri
 \end{figure}
 
 A function \ttdec{Untag} which converts tagged descriptions to ordinary descriptions is shown in Figure~\ref{fig:untagdesc}.
-The \ttdec{Untag} function converts the function arguments of \tttype{TaggedDesc} to data arguments by using the \ttconstructor{Arg}, which ensures
-that the provided tags are stored with the rest of the data arguments when constructed.
+The \ttdec{Untag} function converts the function arguments of \tttype{TaggedDesc} to described data by using \ttconstructor{Arg}, which ensures
+that the provided constructor tags are stored with their respective constructor arguments.
 
 A key advantage of accepting a \ttdec{TaggedDesc} and then calling \ttdec{Untag}---instead of merely accepting an ordinary \tttype{Desc}---is that the type system
 gains knowledge that the first two arguments of data are of type \ttdec{CLabel} and \tttype{Tag}.
-This permits the algorithm designer, to treat those arguments differently when \textit{e.g.}, pretty printing the datatype.
+This permits the algorithm designer, to treat those arguments differently when pretty printing the datatype, during serialisation, and so on and so forth.
 
 \begin{figure}[ht]
 \begin{center}
@@ -697,7 +697,7 @@ This permits the algorithm designer, to treat those arguments differently when \
 
 Figure~\ref{fig:tagdata} shows a type \ttdec{TData} which is the analogous of \tttype{Data} for tagged descriptions.
 The definition is simple as it simply converts the provided tagged description to an ordinary description, and then calls \tttype{Data} on that.
-Therefore, the main point of using \ttdec{TData} is to ease the conversion between tagged descriptions and dependent described types.
+Therefore, the main point of using \ttdec{TData} is to make it easy to convert a tagged description to a described type.
 
 
 
@@ -985,8 +985,8 @@ The process prestented is simple: it starts with all constructors being in their
 \section{Creating descriptions from ordinary datatype declarations}
 \label{sec:Creating descriptions from ordinary data declarations}
 The description datatype \tttype{Desc} described in Chapter~\ref{cha:GenericProgramming} presents the necessary plumbing to perform generic programming.
-However, creating described types required a lot of boilerplate for encoding, requiring labels, descriptions and aliases to be manually written out using the provided low-level constructs.
-It would be better if the compiler could generate the necessary descriptions and aliases from ordinary datatype declarations since that would provide the powerful generic constructs without sacrificing the immediate readability of the datatype structure.
+However, creating described types required a lot of heavy encoding; requiring labels, descriptions and aliases to be manually written out using the provided low-level constructs.
+It would be better if the compiler could generate the necessary descriptions and aliases from ordinary datatype declarations since that would provide the powerful generic constructs without sacrificing the immediate readability of how the datatype is structured.
 This section highlights my effort on extending the Idris language with constructs to make it simpler to work with described types.
 
 \subsection{High-level overview}
@@ -1786,14 +1786,199 @@ For example the \tttype{OList} shown in Figure~\ref{fig:olist} seems in fact to 
 \chapter{Optimising Idris for flight}
 \label{cha:OptimizingIdrisforFlight}
 
+The generic encoding of datatypes via descriptions provided a powerful and flexible way to implement algorithms once for many datatypes as shown in Chapter~\ref{cha:PracticalExamples}.
+This could save the programmer the time to implement many algorithms each time a new datatype was declared, and at the same time lessen the probability that a bug is made.
+
+However, the presented encoding comes at a price: it adds an overhead to the datatype which is linear to the size of the constructed data.
+This can significantly hurt the runtime performance, and therefore it is desired to find a way to optimise the generated code such that the presented framework is a viable option for realistic programs.
+Section~\ref{sec:Analysingtheencodingoverhead} presents an analysis on how the encoding adds overhead to the constructed data and which parts could be optimised away.
+Section~\ref{sec:Preparingdescriptionsforerasure} presents an extension to the presented description type that enables erasure of arguments.
+Finally, Section~\ref{sec:Sketchingoutanalgorithmforspecialisingdescribedtypes} presents an informal description of a partial evaluation-based algorithm that enables
+specialisation of datatypes.
+
 \section{Analysing the encoding overhead}
 \label{sec:Analysingtheencodingoverhead}
 
+To examine the overhead which incurs when constructing described types, the following paragraphs will present a few simple examples of constructed data from described types and analyse the individual components.
+
+\subsection{The price of genericity}
+\label{sub:The price of genericity}
+
+\subsubsection{The case of informationless data}
+\label{ssub:The case of informationless data}
+
+In the presented description scheme, even the simplest kind of data get complex results when converted to described types.
+For example, Figure~\ref{fig:overheadbool} represents the described version of the boolean value \ttconstructor{True}.
+What can be observed is that there is some additional data required to make it work in a described context.
+The constructor \ttconstructor{Con} is required to build a possibly recursive described type, the label \ttliteral{"True"} and the dependent tag \ttconstructor{TS~TZ} are required to choose the type of data constructed, \ttconstructor{Refl} is used to enforce restrictions on indices
+and all these arguments (of \ttconstructor{Con}) must be wrapped in several dependent pairs to store the data.
+This is a stark contrast to simply using the constructor that originally was represented, namely \ttconstructor{True}, which satisfies the required type by definition.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/GenericsOverheadBool.png}
+\end{center}
+\caption{The described version of the constructor \ttconstructor{True} from \tttype{Bool}}
+\label{fig:overheadbool}
+\end{figure}
+
+Another example representing the described version of the vector \ttconstructor{[}\ttliteral{42}\ttconstructor{]}, is presented in Figure~\ref{fig:overheadlist}.
+The shape of the data is similar to the shape of the described version of \ttconstructor{True}, in that it uses \ttconstructor{Con} whenever data needs to be constructed, is immediately followed by the relevant constructor label and tag and always ends with \ttconstructor{Refl}
+after containing the relevant constructor arguments.
+Probably, the more interesting part is the constructor arguments to the described version of \ttconstructor{Cons} which are \ttliteral{0} and \ttliteral{42}.
+Recall from Figure~\ref{fig:vecdescim}, that \ttliteral{0} represents the length of the recursive argument and \ttliteral{42} represents data of the parameter type.
+Usually, the length of the recursive argument can be erased by Idris\,\autocite{tejiscak2014erasure}, since it can be inferred from the rest of the arguments.
+If it was not erased the size of the list would be quadratic, since the natural numbers which are used as indices use a unary representation, and a natural number must appear at every application of \ttconstructor{Cons}.
+However, the encoding presented does not make it possible to represent erasable arguments, and Section~\ref{sec:Preparingdescriptionsforerasure} discusses what changes are necessary to achieve such feature.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/GenericsOverheadList.png}
+\end{center}
+\caption{The described version of \ttconstructor{[}\ttliteral{42}\ttconstructor{]} of type \tttype{Vec}~\tttype{Nat}~\ttliteral{1}}
+\label{fig:overheadlist}
+\end{figure}
+
+However, since ordinary constructors and their described equivalent are isomorphic, the described versions do not strictly contain more information.
+This is because the data in the described type is all statically known and therefore not by itself interesting.
+The only thing that differs is the form, where the described versions are more suitable to be used with generic algorithms.
+This difference however comes at a price, it requires storing additional data with increasingly more references; something which could result in a significant performance loss at runtime if not optimised.
+It would therefore be desirable to use partial evaluation techniques when possible to reduce the size of the datatypes at runtime, and possible improve the performance of algorithms that use these structures.
+
+\subsubsection{It is all in the details}
+\label{ssub:Itisallinthedetails}
+The figures presented in the previous paragraphs, do not provide a complete overview of the data there is because implicit parameters were not shown.
+In fact, when examining the implicit parameters it can observed that things like parameter and index values are usually stored in the data too.
+
+For example, Figure~\ref{fig:overheadboolimpl} takes a look again at the described version of \ttconstructor{True} (from Figure~\ref{fig:overheadbool}) but this time with the implicit arguments displayed.
+The first thing to notice is that in addition to the other data, when creating a described type using \ttconstructor{Con}, the type of indices, the index value and the description for the whole type must also be provided as arguments.
+Additionally, the constructor tags also contain information about the current label, and the rest of the possible labels as implicit parameters.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/GenericsOverheadBoolImpl.png}
+\end{center}
+\caption{The described version of \ttconstructor{True} with implicit parameters displayed}
+\label{fig:overheadboolimpl}
+\end{figure}
+
+Figure~\ref{fig:overheadlistimpl} shows similarly the described version of \ttconstructor{[}\ttliteral{42}\ttconstructor{]} from Figure~\ref{fig:overheadlist} with implicit parameters described.
+One thing to notice that the type of indices and the description are provided for each application of \ttconstructor{Con}.
+Similarly, alot of data seems replicated like the list of labels for tags.
+Looking at these examples, it would seem that the encoding might prove to provide a bigger overhead than initially assumed.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/GenericsOverheadListImpl.png}
+\end{center}
+\caption{The described version of \ttconstructor{[}\ttliteral{42}\ttconstructor{]} with implicit parameters displayed}
+\label{fig:overheadlistimpl}
+\end{figure}
+
+Luckily, since many of these implicit arguments are inferable from the type signature, Idris can use various optimisation techniques like collapsing\,\autocite{Brady04inductivefamilies} and erasure\,\autocite{tejiscak2014erasure} such that they do not affect the runtime performance.
+However, the type system must still be able to type check this kind of data and elaborating described types would be significantly slower than their equivalent constructors because of all the arguments that needs to be inferred and checked.
+Therefore it might be desirable to somehow limit the amount of time rechecking the same kind of structure.
+One solution could be to provide aliasing functions
+\footnote{Unfortunately, at present Idris does not support pattern aliases so this would only work when constructing datatypes}
+just as the ones presented in Chapter~\ref{cha:LevitatingIdris}, which could be used whenever the work involves specific described types.
+Thus, for specific datatypes many arguments only needs to be elaborated once for each alias, instead of every time new data is constructed.
+
+\subsubsection{Annotating static data}
+\label{ssub:Annotating static data}
+There are several ways one could analyse data to find what parts of data is static.
+For example, it could be possible to use the minimal function graph-based analysis used in Section~\ref{sec:ConstructorSpecialisation}.
+However, many of the described type can be generated from ordinary datatype declarations as presented in Chapter~\ref{cha:LevitatingIdris}, and it may already be known at generation time what some of the static data in the generic representation is.
+Therefore, it might be worthwhile to examine the generated constructor aliases, and try to identify what static data might be optimised already at those points.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/VectorSynthesisedConstructorsAnalysis.png}
+\end{center}
+\caption{Annotating the static (underlined) and erasable (dotted underline) parts of the constructors for the described version of \tttype{Vec}}
+\label{fig:btvecctors}
+\end{figure}
+
+Constructor aliases for the described version of \tttype{Vec} are shown in Figure~\ref{fig:btvecctors}, along with annotations to show the static (solid underline) and erasable (dotted underline) parts
+of the data. For \ttdec{Nil} all the provided data to \ttconstructor{Con} is statically provided, which makes sense since \ttconstructor{Nil} is usually a nullary constructor and does not contain any data.
+The only data that is not static for \ttdec{Cons} is \ttvar{n}, \ttvar{x} and \ttvar{xs}, which mimics the data stored in the ordinary version of \ttconstructor{Cons}.
+Since \ttvar{n} is inferable from the type signature of \ttdec{Cons}, it would usually be possible for Idris to erase such value if was otherwise not stored.
+In summary, there is plenty of room to specialise constructors to remove static and erasable data already at the point where aliases are generated, and perhaps more so if a more elaborate analysis was made.
+
 \section{Preparing descriptions for erasure}
 \label{sec:Preparingdescriptionsforerasure}
+In Section~\ref{sec:Analysingtheencodingoverhead}, it was mentioned that it would be desirable if there was a way to synthesise types with erasable data from descriptions.
+This Section presents a few extensions to the description type that enables the user to exploit erasability as an optimisation technique.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/ErasureType.png}
+\end{center}
+\caption{An annotation to specify erasure of arguments}
+\label{fig:erasety}
+\end{figure}
+
+Figure~\ref{fig:erasety} presents a simple type \tttype{Erasure} which can be used to specify the erasability of arguments.
+The constructor \ttconstructor{None} specifies that no erasure should happen, and the constructor \ttconstructor{Erasable} specifies that an argument may be erased.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/DescriptionWithErasure.png}
+\end{center}
+\caption{Extending the description constructor \ttconstructor{Arg} to support an erasure annotation as argument}
+\label{fig:erasedesc}
+\end{figure}
+
+To enable described types to have erasable arguments, the description must be slightly modified.
+Figure~\ref{fig:erasedesc} shows an updated version of \ttconstructor{Arg}, which has an added first argument requiring an annotation of type \tttype{Erasure}.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/ExistsType.png}
+\end{center}
+\caption{A dependent pair type \tttype{Exists}, with the first component being erasable}
+\label{fig:existsty}
+\end{figure}
+
+The next step is to convert described types with description \ttconstructor{Arg} to ordinary types that satisfy the required properties of the given erasure annotation.
+The target type to convert described types with erased arguments to is going to be \tttype{Exists} and is presented in Figure~\ref{fig:existsty}.
+The type \tttype{Exists} is similar to the ordinary dependent pair, except the first argument of its constructor \ttconstructor{Evidence} is marked to be erasable (by using \texttt{.} in front of the argument)
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/SynthesisingDataWithErasure.png}
+\end{center}
+\caption{Synthesising the different versions of \ttconstructor{Arg}, depending on erasure properties}
+\label{fig:erasesynth}
+\end{figure}
+
+The actual translation of the different kinds of \ttconstructor{Arg} values to types using \ttdec{Synthesised} is shown in Figure~\ref{fig:erasesynth}.
+The translation of non-erasable arguments is the same as before, but values having the \ttconstructor{Erasable} annotation are translated to \tttype{Exists} instead to ensure the correct erasure.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/VectorSynthesisedConstructorsWithErasure.png}
+\end{center}
+\caption{Updated version of alias \ttdec{Cons}, now using \ttconstructor{Evidence} for storing erasable argument \ttvar{n}}
+\label{fig:erasecons}
+\end{figure}
+
+Finally, Figure~\ref{fig:erasecons} shows an updated version of \ttdec{Cons} where the value \ttvar{n} can be erased.
+Notice however, that the resulting value must use \ttconstructor{Evidence} instead of the ordinary dependent pair constructor when constructing erasable arguments.
+
 
 \section{Sketching out an algorithm for specialising described types}
 \label{sec:Sketchingoutanalgorithmforspecialisingdescribedtypes}
+\subsection{Specialisation of static parameters}
+\label{sub:Specialisation of static parameters}
+
+\subsection{Unboxing nested references}
+\label{sub:Unboxing nested references}
+
+\subsection{Trick applies here}
+\label{sub:Trick applies here}
+
+\subsection{Substitution in algorithms}
+\label{sub:Substitution in algorithms}
 
 %\section{Challenges and recommendations in improving elaboration time}
 %\label{sec:Challengesandrecommendationsinimprovingelaborationtime}
