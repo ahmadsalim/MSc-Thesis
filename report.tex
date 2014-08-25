@@ -1,4 +1,5 @@
 \documentclass{ituthesis}
+\usepackage[]{tikz} 
 \usepackage[]{hyperref}
 \usepackage[]{float} 
 \usepackage[]{csquotes} 
@@ -23,6 +24,8 @@
 \definecolor{declared-var-color}{RGB}{192,80,77}
 \definecolor{local-var-color}{RGB}{230,185,184}
 \definecolor{literal-color}{RGB}{179,162,199}
+
+\definecolor{titlepagecolor}{cmyk}{1,.60,0,.40}
 
 \newcommand{\ttconstructor}[1]{\textcolor{constructor-color}{\texttt{#1}}}
 \newcommand{\tttype}[1]{\textcolor{type-color}{\texttt{#1}}}
@@ -149,7 +152,7 @@ The main contributions of this thesis are:
 
 The report is structured as follows. Chapter~\ref{cha:GenericProgramming} presents an introduction to described types specifically focusing on recent developments using dependently-typed programming languages.
 Chapter~\ref{cha:PartialEvaluation} presents an overview of techniques for partial evaluation of functions and specialisation of datatypes. Chapter~\ref{cha:LevitatingIdris} discusses specifically how I implemented described types in Idris and continues with practical examples in Chapter~\ref{cha:PracticalExamples}.
-Chapter~\ref{cha:OptimizingIdrisforFlight} presents the optimisations that can be made in order to improve the runtime performance of described types and generic functions. Evaluation of the results happens in Chapter~\ref{cha:Evaluation} comparing the performance of generic implementations to hand-written ones.
+Chapter~\ref{cha:OptimizingIdrisforFlight} presents the optimisations that can be made in order to improve the runtime performance of described types and generic functions.
 Finally, Chapter~\ref{cha:Discussion} discusses the challenges that still lie ahead and concludes the effort.
 \chapter{Generic programming}
 \label{cha:GenericProgramming}
@@ -1986,28 +1989,155 @@ The translation of non-erasable arguments is the same as before, but values havi
 Finally, Figure~\ref{fig:erasecons} shows an updated version of \ttdec{Cons} where the value \ttvar{n} can be erased.
 Notice however, that the resulting value must use \ttconstructor{Evidence} instead of the ordinary dependent pair constructor when constructing erasable arguments.
 
-
 \section{Sketching out an algorithm for specialising described types}
 \label{sec:Sketchingoutanalgorithmforspecialisingdescribedtypes}
+This section will sketch out an algorithm for removing some of the static data identified in Section~\ref{sec:Analysingtheencodingoverhead},
+by utilising some of the techniques presented in Chapter~\ref{cha:PartialEvaluation}.
+The core idea of the algorithm to exploit the additional information provided by the power dependent type system of Idris,
+to eliminate some of the static overhead present in some datatypes.
+While this algorithm seem to be usable in the case of specialising described types, it is not limited just to that application and could probably be used for other kinds of datatypes, \textit{e.g.},
+one could imagine specialising \tttype{Fin}~\ttliteral{2} to \tttype{Bool}.
+
 \subsection{Specialisation of static parameters}
-\label{sub:Specialisation of static parameters}
+\label{sub:Specialisationofstaticparameters}
+The first step towards specialising datatypes, is by specialising parameters when they are statically provided.
+This is done by creating a new datatype declaration with almost identical definition, except that the parameters are fixed to the provided values
+and any recursive argument refers to the newly specialised datatype.
+
+There a couple of reasons why it is desirable to specialise parameters, but not indices.
+The first reason is that different branches could differ in the provided index---like \ttconstructor{Nil} and \ttconstructor{Cons} of \tttype{Vec}---but it would still be desirable to keep both branches as part of the same type family.
+The other reason is that since indices may change, the specialisation process may not terminate.
+For example, specialising the \tttype{Nat} index \ttvar{n} for any instance of the type family \tttype{Vec} requires creating an unbounded amount of datatypes (\tttype{Vec}~\ttvar{a}~\ttliteral{0}, \tttype{Vec}~\ttvar{a}~\ttliteral{1}, \tttype{Vec}~\ttvar{a}~\ttliteral{2}, etc.).
+
+Figure~\ref{fig:pesp} shows an example where \tttype{Data} (from Figure~\ref{fig:datafromdesc}) is specialised with the type of indices \ttvar{ix} set to \tttype{Nat},
+and the description \ttvar{d} set to \ttdec{VecD}~\tttype{Int}.
+Notice that the \ttdec{Synthesise} argument of \ttvar{Con} previously accepted a recursive reference \tttype{Data}~\texttt{(}\ttdec{VecD}~\tttype{Int}\texttt{)} as argument,
+which must be changed to refer to the specialised version \tttype{Data\_\_Vec\_Int}.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PESpecialising.png}
+\end{center}
+\caption{Specialising \tttype{Data} with parameter \ttvar{ix} having value \tttype{Nat}, and parameter \ttvar{d} having value \ttdec{VecD}~\tttype{Int}}
+\label{fig:pesp}
+\end{figure}
+
+Since some arguments of \ttdec{Synthesise} in the constructor \ttconstructor{Con} are provided statically now, it is possible to normalise the expression.
+Figure~\ref{fig:pespext} shows that normalised version of \ttdec{Synthesise} with regards to the provided arguments.
+Notice that it is not possible to further normalise the \ttdec{Synthesise} application on \ttdec{switchDesc}, since \ttdec{switchDesc} is dependent on dynamic arguments \ttvar{l} and \ttvar{t}.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PESpecialisingExpansion.png}
+\end{center}
+\caption{Normalising the \ttdec{Synthesise} call from Figure~\ref{fig:pesp}}
+\label{fig:pespext}
+\end{figure}
 
 \subsection{Unboxing nested references}
-\label{sub:Unboxing nested references}
+\label{sub:Unboxingnestedreferences}
+Taking a value of a dependent pair type as argument may be less optimal than simply accepting the arguments directly,
+since it requires an additional allocation or \textit{box} in memory.
+This doesn't only increase the storage requirements, but may also hurt runtime performance since it would require chasing multiple pointers.
 
-\subsection{Trick applies here}
-\label{sub:Trick applies here}
+One particular technique used to avoid such situation is called \textit{unboxing}\,\autocite{Jones91unboxedvalues,Leroy97theeffectiveness}, which is used to inline references to other datatypes.
+To unbox a datatype, one takes each reference to it and replace it by its individual components.
+For example, to unbox a dependent pair \tttype{(}\ttvar{x}\texttt{:}\ttvar{a}~\tttype{**}~\ttvar{b}\tttype{)}, one takes the arguments of its constructor---of types \ttvar{a} and \ttvar{b a} respectively---
+and uses these as arguments in the enclosing constructor.
 
-\subsection{Substitution in algorithms}
-\label{sub:Substitution in algorithms}
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PEUnboxing.png}
+\end{center}
+\caption{Unboxing the dependent pair type argument to ordinary arguments of \ttconstructor{Con}}
+\label{fig:peunbox}
+\end{figure}
 
-%\section{Challenges and recommendations in improving elaboration time}
-%\label{sec:Challengesandrecommendationsinimprovingelaborationtime}
+Figure~\ref{fig:peunbox} shows the unboxing of the nested dependent pair required of argument to three ordinary arguments of the constructor \ttconstructor{Con}.
+These resulting arguments are the label \ttvar{l}, the tag \ttvar{t} and the rest of the description \ttvar{arg}.
+
+\subsection{Trickery applies here}
+\label{sub:Trickery applies here}
+It would seem that after the Section~\ref{sub:Unboxingnestedreferences}, that all apparent static data has been eliminated and that we are seemingly stuck in doing further partial evaluation.
+However, save some inlining of data not much has been achieved, but as observed in Section~\ref{sec:Analysingtheencodingoverhead} there is still some data which appears to be static after \ttvar{l} and \ttvar{t} is provided.
+
+\textcite{Jones:1993:PEA:153676} suggests a technique called \textit{the trick} where dynamically provided data can be partially evaluated if it is finitely enumerable.
+This is done by creating new code for each possible value of the enumerable data, and then further partially evaluating each new branch.
+Then a mechanism is used to select the correct branch dependent on the value of the enumerable data at runtime.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PETrick.png}
+\end{center}
+\caption{Splitting constructors based on the different possible values of \tttype{Tag} (with additional unboxing)}
+\label{fig:petr}
+\end{figure}
+
+For the presented example in Figure~\ref{fig:peunbox}, the list of possible constructors  \ttconstructor{[}\ttliteral{"Nil"}\ttconstructor{,}\ttliteral{"Cons"}\ttconstructor{]} is known and so the value \ttvar{t} is finitely enumerable and by dependency the value \ttvar{l} becomes static.
+The specialised version using the trick on \ttvar{t}, is presented in Figure~\ref{fig:petr} which has two new constructors representing the branches for the two valid values of \ttvar{t}, namely \ttconstructor{TZ} and \ttconstructor{TS TZ}.
+
+The values displayed between angle quotes are the static data specialised with their correspondingly assigned values.
+These values are not stored at runtime, but may be used by the compiler when specialising algorithms to substitute if these algorithms are dependent on these values.
+For example, the generic pretty printing algorithm depends on knowing the labels and thus requires substituting either \ttliteral{"Nil"} or \ttliteral{"Cons"} where \ttvar{l} is used.
+
+\subsection{Index substitution}
+\label{sub:Index substitution}
+The final optimisation step that can be performed on our example, is to convert simple obvious restrictions on parameters given by propositional equality to ordinary indices.
+Figure~\ref{fig:pesubst} shows such optimisation where the parameter \ttvar{i} has been specialised to the restricted value in each branch---\ttconstructor{Z} for \ttconstructor{Con\_Nil} and \ttconstructor{S}~\ttvar{n} for \ttconstructor{Con\_Cons}---and the corresponding equality arguments has been removed.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PESubst.png}
+\end{center}
+\caption{Eliminating equality restrictions on type arguments, by inlining the expected values as indices}
+\label{fig:pesubst}
+\end{figure}
 
 
+\subsection{Expansion in functions}
+\label{sub:Expansion in functions}
+Similar to the other data-oriented specialisation algorithms presented in Chapter~\ref{cha:PartialEvaluation}, dependent functions must also be specialised to support the updated structure.
+This includes creating new case trees when pattern matching or constructing objects of the specialised type, and then adjusting the control flow to match the new cases.
 
-\chapter{Evaluation}
-\label{cha:Evaluation}
+As an example of how to specialise functions to support the specialised datatypes, see Figure~\ref{fig:genericshow1}.
+The figure presents a specialised version of \ttdec{gshow} with regards to the description \ttdec{VecD}~\tttype{Int} and the relevant constraints.
+Please notice, that the specialisation could not further reduce the \ttvar{d} and \ttvar{cstrs} arguments which represent the description and constraints for constructor arguments,
+since these are dependent on the \ttvar{label} and \ttvar{tag} variables which are bound dynamically.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PEGenericShow1.png}
+\end{center}
+\caption{Specialising \ttdec{gshow} with regards to the description \ttdec{VecD}~\tttype{Int} and its related constraints}
+\label{fig:genericshow1}
+\end{figure}
+
+In order to be able to use the specialised datatype in \ttdec{gshow}, new cases has to be created which mirrors the cases made using ``the trick''.
+Figure~\ref{fig:genericshow2} shows the specialisation of \ttdec{gshow} from Figure~\ref{fig:genericshow1}, where new cases has been made by enumerating possible values of \ttvar{tag} (\ttconstructor{TZ} and \ttconstructor{TS TZ}), similarly to when specialising \tttype{Data\_\_Vec\_Int}.
+In the figure, two minor non-essential adjustments have been done. 
+The first is that it is assumed that \ttdec{gshow} has been updated such that erasable arguments are not pretty printed, and thus neither is the argument \ttvar{n}.
+The other adjustment is that after specialising the expression to show arguments has the form \ttdec{show}~\texttt{@\{}\ttliteral{\%instance}\texttt{\}}~\ttvar{x}, which has been reduced to simply \ttdec{show}~\ttvar{x} since they are equivalent.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PEGenericShow2.png}
+\end{center}
+\caption{The specialised version of \ttdec{gshow} after branching on \ttvar{tag} and further applying partial evaluation techniques}
+\label{fig:genericshow2}
+\end{figure}
+
+Since the function argument now has right shape, it is now possible to replace the generic datatype argument with the specialised one.
+Figure~\ref{fig:genericshow3} shows an updated version of Figure~\ref{fig:genericshow2}, where the different branches now uses the specialised constructors \ttconstructor{Con\_Nil} and \ttconstructor{Con\_Cons} and the concatenation expression has been slightly simplified.
+Finally, it can be observed that the finished result looks very similar to how a manually-written \tttype{Show} instance for \tttype{Vec}~\tttype{Int} would have looked like, and therefore a similar performance characteristic is expected.
+
+\begin{figure}[ht]
+\begin{center}
+    \includegraphics[scale=0.5]{Figures/PEGenericShow3.png}
+\end{center}
+\caption{The final specialised version of \ttdec{gshow}, using the specialised version of the datatype \tttype{Data\_\_Vec\_Int}}
+\label{fig:genericshow3}
+\end{figure}
+
 
 \chapter{Discussion}
 \label{cha:Discussion}
