@@ -2190,14 +2190,16 @@ The function is not implemented to support descriptions, it breaks parametricity
 \subsection{Usability from the perspective of ordinary programmers}
 \label{sub:Usabilityfromtheperspectiveofordinaryprogrammers}
 Generic programming using described types is a powerful concept, permitting programmers to write complex programs that works for many datatypes in a succinct fashion.
-Naturally, it would be desirable to enable ordinary programmers to use such concepts, in order to reduce the time taken doing repetitive implementations for specific datatypes and reduce the number of bugs.
-However, the state of the current literature is that it is often written targeting academics using abstract concepts, extensive type theory and complex features like dependent types.
-For example, it is not uncommon in the literature to introduce many syntactic short cuts\,\autocite{Chapman:2010:GAL:1863543.1863547,mcbride2010ornamental} which makes it easier to write complex expressions, but at the cost of making it harder for the reader to immediately understand the underlying concepts.
+Naturally, it would be desirable to enable ordinary programmers to use such concepts.
+This is because it reduces the time taken avoiding repetitive implementations of an algorithm for specific datatypes while at the same time reducing the risk of creating new bugs.
+However, the state of the current literature is that it is often written targeting academics using abstract concepts with extensive use of type theory and complex features of dependent types.
+For example, it is not uncommon to find many syntactic short cuts introduced in the literature\,\autocite{Chapman:2010:GAL:1863543.1863547,mcbride2010ornamental}.
+While this is something that makes it easier to write complex expressions, it comes at the price of making it harder to immediately understand the underlying concepts for ordinary programmers.
 
 One of my aims was therefore to present a more practical tutorial (see Chapter~\ref{cha:GenericProgramming}), focusing on using the existing theory to build an intuition on how descriptions work.
 Therefore, I had chosen to omit all but the necessary parts of type theory, and instead focusing on generic programming as something that relates to the \textit{structuring} of datatypes.
-I had started by analysing how a typical datatype is structured, and then showing how to convert datatypes to descriptions start with the simple \tttype{()} type, then progressing towards more complex indexed types such as \tttype{Vec}~\ttvar{a}~\ttvar{n}.
-After providing an intuition on how to build descriptions for commonly used datatypes, I started adding some of the more complex concepts such as how to provide an informative encoding of constructor tags and how to synthesise actual types from provided descriptions.
+I had started by analysing how a typical datatype is structured, and then showed how to convert datatypes to descriptions starting with the simple \tttype{()} type, then progressing towards more complex indexed types such as \tttype{Vec}~\ttvar{a}~\ttvar{n}.
+After providing an intuition on how to build descriptions for commonly used datatypes, I started explaining more complex concepts such as how to provide an informative encoding of constructor tags and how to synthesise actual types from provided descriptions.
 Finally, I related the presented encoding back to the literature and provided the motivation on why the encoding was presented in that particular fashion.
 
 Another aim was to make it easy for programmers to use library-provided generic programs without requiring extensive knowledge on how descriptions worked.
@@ -2209,15 +2211,16 @@ These were meant to serve as an inspiration for the ordinary programmer, on how 
 
 Nevertheless, there are still some challenges ahead before generic programming is viable to become a main stream technique.
 One challenge is that the types used in generic programming are very complex, and it requires considerable effort to understand the type signatures for even simple operations.
-This is especially troublesome when dealing with type errors because dependent type systems normalise while elaborating, which results in complex type errors with fully expanded terms even though aliases might have been used.
-It is therefore important to provide a way to present understandable error messages in the future, perhaps by partially collapsing some of the erroneous terms when possible and using techniques such as error reflection\,\autocite{christiansen2014reflect}.
-Another challenge it might be hard to understand the complete encoding of descriptions at first, but the complete encoding is required to do generic programming on all datatypes by the language.
-It might be beneficial if different ``views'' could be presented of the description datatype, making it easier to understand essential features but perhaps at the cost of limiting the number of datatypes supported.
-For example, one might provide a view that makes it easier to make generic algorithms on ordinary Haskell-like datatypes, by eliding details used for describing indexed types.
+This is especially troublesome when dealing with type errors. 
+Because dependent type systems normalise while elaborating, type errors are usually more complex and often contains full expansion of terms, even if abstractions like aliases were used.
+It is therefore important to provide a way to present understandable error messages in the future.
+Perhaps, one way could be by collapsing some of the erroneous terms into higher-level abstractions when possible.
+Another way could be to use techniques such as error reflection\,\autocite{christiansen2014reflect} to simplify and further explain the error messages.
+A different challenge is that it might be hard to comprehend all the details of the complete encoding of descriptions at first.
+Even though the complete encoding is required to support all the various kinds of datatypes, it might be beneficial if different ``views'' of the description could be presented.
+This should make it easier to understand essential features, maybe at the cost of limiting the number of datatypes supported.
+For example, one might provide a view that makes generic programming easier for ordinary datatypes by eliding details used for describing indices.
 Perhaps, a way to provide such feature could be by having simpler aliases to the description datatype where the index type was hidden and hardcoded to \tttype{()}.
-
-In the end, while generic programming may not yet be ready for main stream use; the provided tutorial should make it easier for interested programmers to learn.
-Without extensive use and feedback from these first-movers, it can be hard to end up with a mature framework.
 
 %\begin{enumerate}
   %\item A pedagogical example-based approach to explaining generic programming and descriptions
@@ -2233,19 +2236,19 @@ Without extensive use and feedback from these first-movers, it can be hard to en
 
 \subsection{Usability from the perspective of library implementers}
 \label{sub:Usabilityfromtheperspectiveoflibraryimplementers}
-Described types provides a way to make algorithms which can be used for generically deriving type classes and describing other general properties.
-The literature however is often scarce on presenting examples in a language that use practical features, such as type classes or tactics, like Idris.
+Described types provide a way to make algorithms that can form the basis for deriving type class instances.
+However, the literature is often scarce on presenting examples in a language that supports practical features, such as type classes or tactics, like Idris.
 
-Therefore, I aimed to implement a small collection of examples having commonly used operations in Chapter~\ref{cha:PracticalExamples}, both in terms of operations that form the base of type classes like \tttype{Show} and \tttype{DecEq} but also
+Therefore, I aimed to implement a small collection of examples containing commonly used operations in Chapter~\ref{cha:PracticalExamples}, both in terms of operations that form the base of type classes like \tttype{Show} and \tttype{DecEq} but also
 functions that described purely generic properties like \ttdec{is}.
-These example were written using an open world assumption, and therefore needed to interact with the type class resolution mechanism in order to retrieve the necessary constraints.
-Some of these examples even used the built-in tactics mechanism to make it easier to use functions these generic functions, for example \ttdec{is} used proof search to find the correct \tttype{Tag} value given a particular constructors name.
-This combination of practical features combined with dependent types, make it simpler for library implementers to provide implementations of generic operations with easy to use interfaces without requiring modifications to the compiler.
+These examples were written using an open world assumption, and they thus needed to interact with the type class resolution mechanism in order to retrieve the necessary constraints.
+Examples like \ttdec{is} even use the tactics-based proof search mechanism to find the correct \tttype{Tag} value given a particular constructors name.
+This combination of practical features combined with dependent types, make it simpler for library implementers to provide implementations of generic operations with easy to use interfaces without requiring any modification to the compiler.
 
 While it was shown that it was possible to create many interesting generic algorithms, there were still limitations that were not handled in this project.
 Chapter~\ref{cha:PracticalExamples} discussed the challenges that had risen when trying to implement a SYB-style generics library, and therefore it would still be desirable to find an alternative approach to handling generic traversal on datatypes.
-Additionally, while the presented description datatypes in Chapter~\ref{cha:GenericProgramming} and Chapter~\ref{cha:LevitatingIdris} were able to handle many kinds of datatypes, they could not handle all kinds.
-In order to make generic programming using described types a viable approach to avoid boilerplate in all cases, additional work would be required to support for complex type families like the inductive-inductive and inductive-recursive ones.
+Additionally, while the presented description datatypes in Chapter~\ref{cha:GenericProgramming} and Chapter~\ref{cha:LevitatingIdris} were able to handle many kinds of subject datatypes, they could not handle all of them.
+In order to be able to leverage described types as a way to avoid boilerplate for all kinds of datatypes, additional work would be required to support for complex type families like the inductive-inductive and inductive-recursive ones.
 Finally, future work is required in Idris in order to support higher-order implicit and default arguments in order to be able to mimic datatype definitions exactly by described types.
 
 %\begin{enumerate}
@@ -2261,22 +2264,23 @@ Finally, future work is required in Idris in order to support higher-order impli
 
 \subsection{Applicability of optimisations}
 \label{sub:Applicabilityofoptimisations}
-Generic algorithms wouldn't be of great practical use, if they were orders of magnitude slower than their hand-written counterparts.
-Therefore, it is essential that the generic algorithms written get optimised, and the added overhead eliminated such that they truly are a viable option to use.
+Generic algorithms would not be of great practical use, if they were orders of magnitude slower than their hand-written counterparts.
+Therefore, it is essential that the written generic algorithms get optimised, and the added overhead eliminated.
 Unfortunately, most of the existing literature on descriptions is purely theoretically focused and looks mostly at how it is possible to increase the expression of such frameworks.
 Unlike its Haskell counterparts, there exist few to no optimisation techniques aiming at improving the performance of generic programs in dependently typed programming.
 
-This was the rationale for one of the important aims of this project, to investigate how it was possible to optimise algorithms dependent on described types.
-Chapter~\ref{cha:OptimizingIdrisforFlight} presented an analysis on what the overhead added by encoding datatypes using descriptions, and using that analysis presented two techniques to eliminate the added overhead.
+This was the rationale for one of the important aims of this project, to investigate how it was possible to optimise algorithms that use described types.
+Chapter~\ref{cha:OptimizingIdrisforFlight} presented an analysis on what overhead was added by encoding datatypes using descriptions, and used that analysis to present two optimisation techniques.
 The first technique added support for erasable arguments in the description, and the other technique presented was the design of an algorithm to specialise datatypes.
 The manual application of these algorithm in the case of described \tttype{Vec}~\ttvar{a}~\ttvar{n}, showed it was possible to achieve a result that was very close to using hand-written algorithms on ordinary datatypes.
 
-Since only the design have been sketched out for the presented algorithm, there are still things that are left to future work.
-One of these things would be do provide an implementation of the algorithm, and then do some benchmarking to compare the performance and code size of optimised generic programs compared to hand-written ones.
-Another thing would be to investigate what types of analyses are effective and if there are any heurestics that could be used to further improve performance.
-For example, a static finitely enumerable parameter should probably not split if there is no dependent calculation.
-Finally, it could be interesting to investigate how such algorithm could be extended to be polymorphic, since polymorphism in dependent type system is more loosely defined than in regular type systems.
-Without polymorphic specialisation, it is not possible to specialise things like nested datatypes since there it would require creating an infinite series of datatypes (one for each nesting of parameters), similarly to the case of indices.
+Since only the design has been sketched out for the presented algorithm, there are still tasks that are left out as future work.
+One of these tasks would be do provide an implementation of the designed specialisation algorithm, and then benchmark the resulting code to compare the performance and code size of optimised generic programs to hand-written ones.
+Another task would be to investigate what types of binding-time analyses are effective and if there are any heurestics that could be used to further improve performance.
+For example, a static finitely enumerable parameter should probably not be split if there is no dependent calculation.
+Finally, it could be interesting to investigate how such algorithm could be extended to support polymorphic specialisation, since polymorphism in dependent type system is usually a more loose term than in regular type system.
+Without polymorphic specialisation, it is not possible to specialise datatypes with nested parameters among others, since that would require creating an infinite series of datatypes (one for each nesting of parameters), similarly to the case of indices.
+
 
 %\begin{enumerate}
   %\item A design for a general transformation scheme using partial evaluation
@@ -2292,7 +2296,7 @@ Without polymorphic specialisation, it is not possible to specialise things like
 
 \chapter{Conclusion}
 \label{cha:Conclusion}
-In the \nameref{cha:Intoduction} (Chapter~\ref{cha:Intoduction}) I put forth three different goals: to find and explain upon a suitable generic representation of datatypes from existing literature, to show how this representation can be used in practical contexts and to perform optimisation such that generic programming is a viable option in realistic programs.
+In the \nameref{cha:Intoduction} (Chapter~\ref{cha:Intoduction}) I put forth three different goals: to find and explain a suitable generic representation of datatypes from existing literature, to show how this representation can be used in practical contexts and to perform optimisation such that generic programming is a viable option in realistic programs.
 
 For the first goal, I had been inspired by the latest research\,\autocite{Chapman:2010:GAL:1863543.1863547,Dagand2013acosmology,diehl2014eliminators} and made a description for datatypes that is suitable to use in the context of Idris.
 I had focused on providing a detailed and peer-oriented tutorial, with a less steep learning curve than provided by the literature.
