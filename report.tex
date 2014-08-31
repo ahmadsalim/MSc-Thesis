@@ -1,6 +1,6 @@
 \documentclass{ituthesis}
 \usepackage[]{tikz} 
-\usepackage[]{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage[]{float} 
 \usepackage[]{csquotes} 
 \usepackage[]{graphicx} 
@@ -60,10 +60,11 @@
 \newpage
 
 \chapter*{Abstract}
-Goal: Implementation of levitation in a realistic setting, with practical performance benefits.
-\blockquote{DISCLAIMER: This is a draft and as such is incomplete, incorrect and can contain grammatical errors.
-Although I claim originality of this report, many underlying ideas are based on current work in the scientific community which will be correctly attributed
-when the work is complete.}
+
+\smallskip
+\noindent \textbf{Keywords.} Descriptions. Described types. Generic programming. Levitation. Dependent types. Idris. Partial Evaluation. Constructor Specialisation.
+
+\chapter*{Acknowledgements}
 
 \cleardoublepage
 \setcounter{tocdepth}{1}
@@ -77,7 +78,7 @@ when the work is complete.}
 \section{Context}
 \label{sec:Context}
 Algebraic datatypes such as Boolean values, lists or trees form a core part of modern functional programming.
-Most functions written work directly on such datatypes, but some functions like structural equality or pretty printing (see Example~\ref{exmp:prettyprint}) don't directly dependent on the datatype itself.
+Most functions written work directly on such datatypes, but some functions like structural equality or pretty printing (see Example~\ref{exmp:prettyprint}) do not directly dependent on the datatype itself.
 Therefore, writing such functions for each different datatype becomes a repetitive exercise.
 In fact it is possible to write an algorithm over the structural definition of the datatype, which the computer then could use to derive an actual function for each particular datatypes.
 
@@ -99,7 +100,7 @@ In fact it is possible to write an algorithm over the structural definition of t
 \end{exmp}
 
 Enter the world of \textit{generic programming} where the target datatype is the one describing the structure of other datatypes, often called the \textit{description}\label{kw:desc}.
-While generic programming sounds promising, it is usually seen as an aspect of Haskell\,\autocite{haskell98} that is challenging to use by ordinary programmers. To represent the description, it is often required to use special language extensions\,\autocite{magalhaes2010generic,Jansson:1997:PPP:263699.263763} and the programming style tends to require different abstractions than when writing ordinary programs.
+While generic programming sounds promising, it is usually seen as an aspect of Haskell\,\autocite{haskell98} that is challenging to use by ordinary programmers. To represent the description, it is often required to use special language extensions\,\autocite{magalhaes2010generic,Jansson:1997:PPP:263699.263763} and the programming style tends to require other abstractions than used in ordinary programs.
 
 %A tiny bit of history here?
 However, in dependently-typed languages such as Idris\,\autocite{brady2013idris} or Agda\,\autocite{norell2009dependently} it is possible to create a correct description using ordinary datatype definitions\,\autocite{benke2003universes}.
@@ -128,7 +129,7 @@ The aim of this research is to provide a practical and efficient implementation 
 This project has three primary goals.
 
 The first goal is to find a good definition of the description that supports many common datatypes.
-I mainly seek to reuse some of the existing work, and not to further develop underlying type theory to support more complex inductive families; neither will I focus on supporting all language features of Idris such as implicit arguments and codata definitions.
+I mainly seek to reuse some of the existing work, and not to further develop underlying type theory to support more complex inductive families; neither will I focus on supporting all language features of Idris such as implicit arguments and codata definitions\,\autocite{idris2014tutorial}.
 
 The second goal is to present realistic examples using generic functions working on described types. 
 This mainly includes implementing functions that can be used to derive type class instances, and a Scrap Your Boilerplate-style (SYB) library for generic querying and traversal.
@@ -176,13 +177,13 @@ Figure~\ref{fig:anatomydatatype} presents an annotated version of a typical depe
 A datatype consists of a type constructor which lists what type-level arguments are required, and zero or more data constructors which describe how to create values of the datatype.
 The type constructor has three components: a name for the datatype, types of any possible parameters, and the types of possible indices.
 In Figure~\ref{fig:anatomydatatype} there is no syntactic difference between a parameter type or an index type since Idris figures that out automatically
-\footnote{If an argument to a type constructor doesn't change in the data constructor declarations, Idris considers it a parameter, otherwise an index.},
+\footnote{If an argument to a type constructor does not change in the data constructor declarations, Idris considers it a parameter, otherwise an index.},
 unlike other dependently-typed languages like Agda which have a syntactic distinction.
 
 Similarly to the type constructor, a data constructor needs a name, also called a \textit{tag}.
 Following the tag, the data constructor declaration contains the types of the arguments stored in the constructor and the resulting type that must use the type constructor of the datatype.
 In our example two constructors are declared, \ttconstructor{Nil} and \ttconstructor{Cons}.
-The constructor \ttconstructor{Nil} doesn't hold any data, so it only needs to define the resulting type which is \tttype{Vec}~\ttvar{a}~\ttconstructor{Z} (a vector with length \ttliteral{0}).
+The constructor \ttconstructor{Nil} does not hold any data, so it only needs to define the resulting type which is \tttype{Vec}~\ttvar{a}~\ttconstructor{Z} (a vector with length \ttliteral{0}).
 The constructor \ttconstructor{Cons} contains three different types of arguments: an ordinary implicit argument, an ordinary explicit argument, and an explicit argument of the type itself (recursive); the resulting type for \ttconstructor{Cons} is \tttype{Vec}~\ttvar{a}~\texttt{(}\ttconstructor{S}~\ttvar{n}\texttt{)}, that is, a vector of length \ttliteral{1}\texttt{+}\ttvar{n} where \ttvar{n} is the length of the recursive argument.
 
 \begin{asideblock}
@@ -223,7 +224,7 @@ The description datatype \tttype{Desc} has three main constructors:
 
 To get an idea on how descriptions for various interesting datatypes look like, the following paragraphs will show a series of examples providing a side-by-side comparison of ordinary declarations to descriptions.
 The declaration of the trivial singleton type \tttype{Unit} is displayed in Figure~\ref{fig:declunit}, and its corresponding description is displayed in Figure~\ref{fig:descunit}.
-Since the sole constructor \ttconstructor{MkUnit} doesn't contain any arguments, \ttconstructor{Ret} is used to simply end the description.
+Since the sole constructor \ttconstructor{MkUnit} does not contain any arguments, \ttconstructor{Ret} is used to simply end the description.
 
 \begin{figure}[ht]
 \begin{center}
@@ -305,7 +306,7 @@ Unlike \tttype{Pair} and \tttype{Either} which were monomorphic in the presented
 The way to represent parameters is by having them as arguments to the function describing the particular datatype, which allows them to be qualified over the whole description.
 The description itself is built using the previously described methods and is displayed in Figure~\ref{fig:desclist}. There is a Boolean argument \ttvar{isNil}, which encodes the choice between the two constructors of the list,
 \ttconstructor{Nil} and \ttconstructor{Cons}.
-Like the description for \ttconstructor{Zero}, the description for \ttconstructor{Nil} is simply \ttconstructor{Ret} since it doesn't accept any arguments.
+Like the description for \ttconstructor{Zero}, the description for \ttconstructor{Nil} is simply \ttconstructor{Ret} since it does not accept any arguments.
 The description for \ttconstructor{Cons} takes an argument of the parameter type (the head of the list), a recursive argument (the tail of the list) and then ends the description.
 
 \begin{figure}[ht]
@@ -331,7 +332,7 @@ This will be discussed in Section~\ref{sub:Indexingdescriptions}.
 To allow datatypes to be indexed by values, the description structure takes a parameter that describes what the type of indices must be.
 Figure~\ref{fig:descriptiondatatype} shows an updated version of Figure~\ref{fig:simpldescdatatype}, that contains the necessary parameter \ttvar{ix} for indexing datatypes.
 The constructors \ttconstructor{Ret} and \ttconstructor{Rec}, must also be updated to take a value of \ttvar{ix} in order to represent what the index of the result type and recursive argument must be respectively.
-Descriptions that don't require indices can be converted to indexed descriptions by using the unit type \tttype{Unit} (or its syntactic form \tttype{()}) as index.
+Descriptions that do not require indices can be converted to indexed descriptions by using the unit type \tttype{Unit} (or its syntactic form \tttype{()}) as index.
 
 \begin{figure}[ht]
 \begin{center}
@@ -359,7 +360,7 @@ whereas the type of an index must be provided to the \tttype{Desc} type construc
 This is to ensure that all provided indices conform to the same expected type, while still allowing the values to change inside the description.
 
 A Boolean argument \ttvar{isNil} is used to describe the choice between constructors \ttconstructor{Nil} and \ttconstructor{Cons}.
-The constructor \ttconstructor{Nil} doesn't contain any data so we simply use \ttconstructor{Ret~Z}, which indicates that the description is finished and the resulting type is expected to have index \ttconstructor{Z}, analogously to Figure~\ref{fig:anatomydatatype}.
+The constructor \ttconstructor{Nil} does not contain any data so we simply use \ttconstructor{Ret~Z}, which indicates that the description is finished and the resulting type is expected to have index \ttconstructor{Z}, analogously to Figure~\ref{fig:anatomydatatype}.
 The constructor \ttconstructor{Cons} takes first two ordinary arguments: a \tttype{Nat} representing the length of the tail, i.e. the index of the recursive argument, and an argument of the parameter type \ttvar{a} representing the head.
 Following these arguments we take a recursive argument representing the tail---specified using \ttconstructor{Rec}---that must have the value of the input \tttype{Nat} argument \ttvar{n} as index, i.e. the argument must be of type \tttype{Vec}~\ttvar{a~n}.
 We finish the description with \ttconstructor{Ret} and specify that the resulting index must be \ttconstructor{S}~\ttvar{n}, just as in Figure~\ref{fig:anatomydatatype}.
@@ -370,7 +371,7 @@ Why aren't the type of parameters required to be encoded inside the description 
 
 To encode the choice of more than two constructors, a simple solution could be to nest multiple Boolean values acting as a form of binary enumeration of tags.
 However this encoding is fairly crude: it does not capture important information such as the names of constructors, requires a series of possibly complicated tests and is not easily extendible if one wants to extend descriptions
-with new constructors. In Section~\ref{sub:AnInformativeEncodingofConstructors}, I will present a more sophisticated encoding that doesn't suffer from these limitations.
+with new constructors. In Section~\ref{sub:AnInformativeEncodingofConstructors}, I will present a more sophisticated encoding that does not suffer from these limitations.
 
 For more demanding datatypes that need more than one index, the indices must be uncurried using dependent pairs.
 For example, a datatype with signature \texttt{(}\ttvar{n}~\texttt{:}~\tttype{Nat}\texttt{)~->~}\tttype{Fin}~\ttvar{n}~\texttt{->}~\tttype{Type} must use the dependent pair \tttype{(}\ttvar{n}~\texttt{:}~\tttype{Nat}~\tttype{**}~\tttype{Fin}~\ttvar{n}\tttype{)} as the type of its index.
@@ -432,7 +433,7 @@ values manually.
 \end{figure}
 
 For the constructors of \tttype{Vec}, Figure~\ref{fig:vecctor} shows an example on what the tag values are. For \ttconstructor{Nil} the value is \ttconstructor{TZ} since it is the first in the list of \ttdec{VecCtors}, and for \ttconstructor{Cons} the value
-is \ttconstructor{TS~TZ} since it is the second. Since there are only two elements in \ttdec{VecCtors}, it shouldn't be possible to create any other valid constructor tag, and as therefore it is a good representative for enumerating the constructors of \tttype{Vec}.
+is \ttconstructor{TS~TZ} since it is the second. Since there are only two elements in \ttdec{VecCtors}, it should not be possible to create any other valid constructor tag, and as therefore it is a good representative for enumerating the constructors of \tttype{Vec}.
 
 \begin{figure}[ht]
 \begin{center}
@@ -516,7 +517,7 @@ Since the dependent pair is used as the target type for the synthesis, it itself
 \label{fig:synthdata}
 \end{figure}
 
-We are able to actual types using \ttdec{Synthesise} from the provided descriptions.
+We are able to create actual types using \ttdec{Synthesise} from the provided descriptions.
 However, a problem occurs when we want to use \ttdec{Synthesise} since it requires the final form of the described datatype as input but the only way to synthesise the datatype is using \ttdec{Synthesise} itself.
 In order to ``tie the knot'' and complete input for \ttdec{Synthesise}, we define a datatype \tttype{Data} that takes a description and provides the final form of the described datatype (see Figure~\ref{fig:datafromdesc}).
 \tttype{Data} has only one constructor namely \ttconstructor{Con} which takes as input the synthesised version of the description \ttvar{d} with \tttype{Data}~\ttvar{d} serving as argument for the final form of the datatype in \ttdec{Synthesise}. This works since each time we face a recursive argument it must be constructed using \ttconstructor{Con} which avoids an infinite loop in \ttdec{Synthesise} as long as the elements that are constructed are smaller in size.
@@ -525,7 +526,7 @@ In order to ``tie the knot'' and complete input for \ttdec{Synthesise}, we defin
 \begin{center}
     \includegraphics[scale=0.5]{Figures/TyingTheSynthesisKnot.png}
 \end{center}
-\caption{Knot-tying the Synthesised Description with Itself}
+\caption{Knot-tying the synthesised description with itself}
 \label{fig:datafromdesc}
 \end{figure}
 
@@ -551,7 +552,7 @@ that the provided index of the value matches up with the expected one.
 There are 4 occurrences of \ttconstructor{Con} and \ttconstructor{Refl} in the example, three for  \ttconstructor{Cons} and one for \ttconstructor{Nil}.
 For all cases the first two arguments represent the constructor label and associated tag. 
 For \ttconstructor{Cons}, the first following argument is the length of the rest of the vector (the value of index \ttvar{n}) followed by the value of the list head and the list tail, ending with \ttconstructor{Refl}.
-For \ttconstructor{Nil}, the value is ended with \ttconstructor{Refl} since it doesn't contain any data.
+For \ttconstructor{Nil}, the value is ended with \ttconstructor{Refl} since it does not contain any data.
 
 
 \begin{figure}[ht]
@@ -594,8 +595,8 @@ and it looks almost exactly like the original value it needed to describe \ttcon
 
 \section{The (mostly) gentle art of levitation}
 \label{sec:TheMostlyGentleArtofLevitation}
-The previous sections presented a series of constructions that makes it possible to have described types.
-What may have become apparent for the reader is that many of these constructions such as \tttype{Data}, \tttype{Tag} and \ttdec{switch} cannot themselves be described,
+The previous sections presented a series of constructions that make it possible to have described types.
+What may have become apparent for the reader is that many of the constructions such as \tttype{Data}, \tttype{Tag} and \ttdec{switch} cannot themselves be described,
 since they are necessary building blocks for having descriptions.
 However, what might be surprising is that the description type \tttype{Desc} itself, isn't in fact limited by such a constraint
 and can be described using itself.
@@ -605,8 +606,8 @@ The description datatype \tttype{Desc} contains many of the constructors needed 
 However, one might experience trouble when trying to describe \ttconstructor{Arg} since it requires an argument of the following type:
 \texttt{(}\ttvar{a}~->\tttype{Desc}~\ttvar{ix}\texttt{)}.
 This argument describes a function which result type is the datatype itself (a so-called higher-order inductive argument), which \ttconstructor{Rec} isn't strong enough to express since it only permits primitive recurrences.
-Figure~\ref{fig:deschrec} shows a new constructor \ttconstructor{HRec}, which allows specification of such higher-order inductive arguments, it takes a type \ttvar{a} which specifies
-the expected input type of such argument in addition to the rest of arguments that are expected by \ttconstructor{Rec}.
+Figure~\ref{fig:deschrec} shows a new constructor \ttconstructor{HRec}, which allows specification of higher-order inductive arguments.
+In addition to the arguments required by \ttconstructor{Rec}, \ttconstructor{HRec} also takes an argument \ttvar{a}, which specifies the type of arguments expected in the higher-order inductive argument it describes.
 
 \begin{figure}[ht]
 \begin{center}
@@ -689,7 +690,7 @@ that the provided constructor tags are stored with their respective constructor 
 
 A key advantage of accepting a \ttdec{TaggedDesc} and then calling \ttdec{Untag}---instead of merely accepting an ordinary \tttype{Desc}---is that the type system
 gains knowledge that the first two arguments of data are of type \ttdec{CLabel} and \tttype{Tag}.
-This permits the algorithm designer, to treat those arguments differently when pretty printing the datatype, during serialisation, and so on and so forth.
+This permits the algorithm designer, to treat those arguments differently when pretty printing, serialising, or performing other operations that depend on the names of the constructors.
 
 \begin{figure}[ht]
 \begin{center}
@@ -720,7 +721,7 @@ Sometimes it is due to the way programs are structured in a modular fashion (e.g
 For example, writing \ttdec{minutesInADay}~\texttt{=}~\ttliteral{24}~\texttt{*}~\ttliteral{60} is usually seen as more preferable to writing \ttdec{minutesInADay}~\texttt{=}~\ttliteral{1440}, since
 it better captures the intent of the programmer.
 Other times, it may be because that the input is known ahead of time and therefore in some way hard-coded (\textit{e.g.}, configuration files or constants).
-No matter what reason, it can be said that any program \ttdec{p} accepts a series of static input \ttvar{i$_{s_0}$}\texttt{\ldots}\ttvar{i$_{s_n}$}~\texttt{$\in$}~\ttvar{I$_{s}$} and a series of dynamic input \ttvar{i$_{d_0}$}\texttt{\ldots}\ttvar{i$_{d_m}$}~\texttt{$\in$}~\ttvar{I$_{d}$}, resulting in some output \ttvar{O}.
+No matter the reason, it can be said that any program \ttdec{p} accepts a series of static input \ttvar{i$_{s_0}$}\texttt{\ldots}\ttvar{i$_{s_n}$}~\texttt{$\in$}~\ttvar{I$_{s}$} and a series of dynamic input \ttvar{i$_{d_0}$}\texttt{\ldots}\ttvar{i$_{d_m}$}~\texttt{$\in$}~\ttvar{I$_{d}$}, resulting in some output \ttvar{O}.
 %A program can be said to have both static and dynamic input
 
 In many cases it is desirable to only compute programs with known input once and for all, instead of suffering a performance loss every time the program is run.
@@ -821,10 +822,10 @@ Using more advanced optimisation techniques, it is still possible to reduce bran
 
 \subsection{Unfolding}
 \label{sub:Unfolding}
-To avoid too many unnecessary indirections in specialised programs, a perhaps important technique is unfolding.
+Unfolding is an important technique that can be used to avoid too many unnecessary indirections in specialised programs.
 Unfolding is usually done at sites where there are function calls and corresponds to inlining the body of the function that is called at the place where it is called.
 In addition to simply inlining the body of the function, unfolding usually needs to do renaming of local variables to avoid clashes with the external environment.
-For a languages with labels, transition compression serves as a good analogue to unfolding, where a jump to a label is replaced with the following instructions.
+For a languages with labels, transition compression serves as a good analogue to unfolding, where a jump to a label is replaced with the instructions following it.
 While there are many advantages to unfolding, and likewise transition compression, if not careful the partial evaluator can end up in an infinite loop or the resulting code can end up with exponential size in the case of poorly chosen static variables\,\autocite{Jones:1993:PEA:153676}.
 Therefore, unfolding cannot be seen as a generally safe technique and must be used with care in places where there are branching or similar.
 
@@ -981,7 +982,7 @@ This happens by traversing the graph and specialising each function as normal, r
 \label{par:Defining suitable types}
 The final phase is to group the newly generated specialised constructors into suitable type definitions.
 This is done in order for the residual program to be valid (type correct) and the compiler can perform other datatype optimisations.
-The process prestented is simple: it starts with all constructors being in their own datatype, and merges datatype as necessary when a program dependens on values from either datatype.
+The process presented is simple: it starts with all constructors being in their own datatype, and merges datatype as necessary when a program depends on values from either datatype.
 
 \chapter{Levitating Idris}
 \label{cha:LevitatingIdris}
@@ -1027,14 +1028,14 @@ Since all the constructor names are represented internally as strings by the com
 \subsubsection{Generation of descriptions}
 \label{ssub:Generation of descriptions}
 The second part of what is generated is a value containing the description of the target described datatype.
-Algorithm~\ref{alg:gendescd} works by traversing the Idris AST, finally producing a new declaration which contains the description.
+Algorithm~\ref{alg:gendescd} works by traversing the Idris Abstract Syntax Tree (AST), finally producing a new declaration which contains the description.
 
 \begin{alg}
   Generating descriptions for datatypes
   \begin{enumerate}
     \item Given a division of parameters \ttvar{x$_j$} and indices \ttvar{y$_k$} create a fitting type signature for the description
        \begin{enumerate}
-         \item For parameters quantify those over the whole description value
+         \item For parameters, quantify those over the whole description value
          \item For indices, they are first ``uncurried'' in a dependent pair, and then the whole dependent pair is passed to the tagged description type \ttdec{TaggedDesc} as index
          \item[] That is, for a datatype
            
@@ -1098,7 +1099,7 @@ What is a parameter?
 In an environment with dependent types, this simple question can lead to more answers than bargained for.
 While almost all notions agree that the type \tttype{Vec}~\ttvar{a}~\ttvar{n} is parametrised by \ttvar{a} and indexed by \ttvar{n}, there has been seemingly less agreement on what a parameter is in general.
 The issue is probably due to the different things that different kinds of parameters are used for, which overloads the word parameter.
-I will in the following sections present some definitions of what a parameter actually is, explain the rationale behind each one and show where they don't agree.
+I will in the following sections present some definitions of what a parameter actually is, explain the rationale behind each one and show where they differ.
 
 \subsubsection{Parameters as eliminator quantifiers}
 \label{ssub:Parameters as eliminator quantifiers}
@@ -1138,7 +1139,7 @@ In the \tttype{NList} example, the \tttype{NList}~\tttype{(}\ttvar{a}\tttype{,}\
 \end{figure}
 
 Parametricity of type arguments is necessary to correctly implement certain useful declarative functions, such as those that are methods of the \tttype{Functor}, \tttype{Traversable} and \tttype{Foldable} type classes from Haskell.
-If constraints were made based on the type argument of the datatype, it wouldn't be possible to satisfy the associated laws of these type classes and possibly not even provide an implementation that can type check.
+If constraints were made based on the type argument of the datatype, it would not be possible to satisfy the associated laws of these type classes and possibly not even provide an implementation that can type check.
 
 \subsubsection{Parameters as uniform indices}
 \label{ssub:Parameters as uniform indices}
@@ -1330,7 +1331,7 @@ Finally, if a higher-order recursive argument is met it is dismissed using \ttde
 \subsubsection{Example: Implementing \tttype{Show} for the described type \ttdec{Pair}}
 \label{ssub:Example:ImplementingShowforPairs}
 As an example of how to use the generic pretty print function \ttdec{gshow} to implement the \ttdec{show} method of \tttype{Show} type class for the described type \ttdec{Pair}, see Figure~\ref{fig:showinst}.
-The call to \ttdec{gshow} is passed the description \ttdec{PairDesc} and the necesssary constraints \ttdec{pairShowConstrs} defined in Figure~\ref{fig:showconstrs}.
+The call to \ttdec{gshow} is passed the description \ttdec{PairDesc} and the necessary constraints \ttdec{pairShowConstrs} defined in Figure~\ref{fig:showconstrs}.
 To create the constraints structure, one simply has to create a tuple to match the type required by \ttdec{Constraints1} and then call \ttliteral{\%instance} the right places.
 The \ttliteral{\%instance} expression is evaluated at compile time, and allows Idris to perform type class resolution returning the associated instance for the target type class.
 
@@ -1356,7 +1357,7 @@ However, Idris cannot do type class resolution for any arbitrary type class \ttv
 
 There could be two solutions to this problem: one would be to create a macro system for Idris which only type checks the expression after it is instantiated with the right type class, and another
 would be to create a suitable tactic that calculates such constraints at compile time when needed.
-Since these solutions would require considerable effort beyond the scope of this project, implementing any of them is considered to be future work.
+Since these solutions would require considerable effort beyond the scope of this project, implementing any of them is considered possible future work.
 
 
 \subsection{Decidable equality}
@@ -1527,7 +1528,7 @@ being that the type signature accepts \tttype{DecEq} instead of \tttype{Show}.
 
 \subsection{Functorial mapping}
 \label{sub:Functorial mapping}
-One interesting generic algorithm that wouldn't work on described types just using \tttype{Desc} is the generic map function, since it requires
+One interesting generic algorithm that would not work on described types just using \tttype{Desc} is the generic map function, since it requires
 an encoding of parameters.
 Therefore, the algorithm is implemented using the version extended with parameters \tttype{ParDesc}.
 The actual implementation of generic map \ttdec{gmapp} is displayed in Figure~\ref{fig:mapgen}, and simply says that
@@ -1544,7 +1545,7 @@ mapping a described type is simply the same as mapping its individual data compo
 The function used to map a function on the individual components \ttdec{gmappd} is presented in Figure~\ref{fig:mapgendesc}.
 The implementation is straightforward and mostly iterates through the structure applying the generic mapping functions where possible, and the only two interesting cases are the ones for the value of the parameter type
 and for the functorially composed recursion.
-When a parameter value (described by \ttconstructor{Par}) is met, then the function to mapped \ttvar{f} is simply applied to that parameter and the mapping continues on the rest of the described type.
+When a parameter value (described by \ttconstructor{Par}) is met, then the function to be mapped \ttvar{f} is simply applied to that parameter and the mapping continues on the rest of the described type.
 For the functorially composed recursive arguments (described by \ttconstructor{CompRec}), there are a couple of steps to be taken.
 First, a mapping function \ttdec{map}~\texttt{@\{}\ttvar{mapc}\texttt{\}}~\ttvar{f} for the elements of the composed type is created by calling the associated \ttvar{Functor} instance \ttvar{mapc} for the composed functor \ttvar{g}, which then has the type \ttvar{g}~\ttvar{a}~\texttt{->}~\ttvar{g}~\ttvar{b}.
 Thereafter, this mapping function has the right type to be provided to the recursive call of \ttdec{gmapp} and the recursive constructor argument can be mapped.
@@ -1559,7 +1560,7 @@ Finally, it is possible to map the rest of the described type.
 \end{figure}
 
 The \tttype{Functor} instance for a type \ttdec{Nested}, that is described by \ttdec{NestedPD} from Figure~\ref{fig:nlistdesc}, is presented in Figure~\ref{fig:functorinst}.
-The implementation simply passes the description \ttdec{NestedPD} to the generic map function \ttdec{gmapp}, which is enough since that implementation doesn't require any specific constraints.
+The implementation simply passes the description \ttdec{NestedPD} to the generic map function \ttdec{gmapp}, which is enough since that implementation does not require any specific constraints.
 
 \begin{figure}[ht]
 \begin{center}
@@ -1686,7 +1687,7 @@ However, it is also possible to manually implement the necessary instances, and 
 Since the \tttype{Post} datatype has two constructors, there are two cases to handle.
 The case for the constructor \ttconstructor{Single} simply extracts the timestamp and returns it as a singleton list, and when to reconstruct the datatype the constructor \ttconstructor{Single} is used
 on the same title as given originally and the newly provided timestamp.
-Since \ttconstructor{Aggregate} doesn't contain any timestamps nothing is extracted, and when it is time to reconstruct the same element as the input is returned.
+Since \ttconstructor{Aggregate} does not contain any timestamps the result is the empty list, and the same element as provided as the input is returned when reconstructing.
 
 \begin{figure}[ht]
 \begin{center}
@@ -1701,7 +1702,7 @@ Since \ttconstructor{Aggregate} doesn't contain any timestamps nothing is extrac
 \subsection{Automatic deriving}
 \label{sub:Automatic deriving}
 As mentioned in Section~\ref{sub:Uniplate in 5 minutes}, one of the more useful features is the ability to automatically derive instances for the \tttype{Uniplate} and \tttype{Biplate} type classes.
-However, as I will present in this section, such thing is not completely obvious how to do this correctly in a setting with dependent types.
+However, as I will present in this section, doing such thing correctly in a dependently typed programming language is not completely obvious.
 In fact, the Uniplate documentation\,\autocite{mitchell2014uniplate} already warns that creating instances (even manually, not just by deriving) for polymorphic types could already produce
 incorrect results:
 
@@ -1733,7 +1734,7 @@ The challenge occurs when the two kinds of data intermix in datatypes when tryin
 
 For example, in the type \tttype{Vec}~\tttype{Nat}~\ttvar{n} there are natural numbers used both as elements and as indices of the datatype.
 However, it is not generally possible to distinguish between the \tttype{Nat} element that is used as index and the \tttype{Nat} member elements, and when trying to extract all natural numbers in order to implement \tttype{Biplate}~\texttt{(}\tttype{Vec Nat}~\ttvar{n}\texttt{)}~\tttype{Nat} it is hard to only get the relevant member data.
-Worse yet, it is not possible to reconstruct new data of type \tttype{Vec} if given an arbitrary \tttype{Nat} which should act as index, since that wouldn't necessarily fit the definition of the datatype.
+Worse yet, it is not possible to reconstruct new data of type \tttype{Vec} if given an arbitrary \tttype{Nat} which should act as index, since that would not necessarily fit the definition of the datatype.
 
 One idea would be to try to completely avoid any data members which appear at type level, however such solution cannot be generally applied.
 As an example see Figure~\ref{fig:olist} which presents a list which enforces a less-than ordering on the elements.
@@ -1795,14 +1796,14 @@ The result would be that both vectors would have twice the length, thus making o
 
 One suggestion to mitigate the problem would be to somehow separate actual data from constraints in the transformation, and then check that the resulting structure still conforms to the necessary invariants.
 However, such a solution is hard to generalise into a proper type signature and also it might not be apparent how such constraints could be formed.
-For example the \tttype{OList} displayed in Figure~\ref{fig:olist} seems in fact to be the best way to enforce an ordering on list elements.
+For example the \tttype{OList} displayed in Figure~\ref{fig:olist} seems to be the best way to enforce an ordering on list elements.
 
 
 \chapter{Optimising Idris for flight}
 \label{cha:OptimizingIdrisforFlight}
 
 The generic encoding of datatypes via descriptions provided a powerful and flexible way to implement algorithms once for many datatypes as displayed in Chapter~\ref{cha:PracticalExamples}.
-This could save the programmer the time to these algorithms, while at the same time lessen the probability that a bug is made.
+This could save the programmer the time to implement these algorithms, while at the same time lessen the probability that a bug is made.
 
 However, the flexibility of the presented encoding comes at a price: it adds a space overhead to the datatype which is linear to the size of the constructed data.
 This can significantly hurt the runtime performance, and it is therefore desired to find a way to optimise the generated code such that the presented framework is a viable option to use for realistic programs.
@@ -1824,7 +1825,7 @@ To examine the overhead which incurs when constructing described types, the foll
 
 In the presented description scheme, even simple datatypes become very complex when encoded as described types.
 For example, Figure~\ref{fig:overheadbool} represents the described version of the boolean value \ttconstructor{True}.
-It can be observed that there additional data is required to make it work in a described context.
+It can be observed that additional data is required to make it work in a described context.
 The constructor \ttconstructor{Con} is required to build a described type, the label \ttliteral{"True"} and the dependent tag \ttconstructor{TS~TZ} are required to choose the type of data constructed, \ttconstructor{Refl} is used to enforce restrictions on indices
 and all these arguments (of \ttconstructor{Con}) must be wrapped in several dependent pairs to store the data.
 This is a stark contrast to simply using \ttconstructor{True}, which satisfies the required type by definition.
@@ -1900,7 +1901,7 @@ Thus, for specific datatypes many arguments need only to be elaborated once for 
 \label{ssub:Annotating static data}
 There are several ways possible to analyse data in order to find the static parts.
 For example, it could be possible to use the minimal function graph based analysis used in Section~\ref{sec:ConstructorSpecialisation}.
-Yet, many of the described types can be generated from ordinary declarations as presented in Chapter~\ref{cha:LevitatingIdris}, and thus it may be known already at generation time what statics parts there are.
+Yet, many of the described types can be generated from ordinary declarations as presented in Chapter~\ref{cha:LevitatingIdris}, and thus it may be known already at generation time what static parts there are.
 Therefore, it might be worthwhile as a heurestic to examine the generated constructor aliases, and try to identify what static data might be optimised already at those points.
 
 \begin{figure}[ht]
@@ -2027,7 +2028,7 @@ Notice that it is not possible to further normalise the \ttdec{Synthesise} appli
 \label{sub:Unboxingnestedreferences}
 Taking a value of a dependent pair type as argument may be less optimal than simply accepting the arguments directly,
 since it requires an additional allocation or \textit{box} in memory.
-This doesn't only increase the space requirements, but may also hurt runtime performance since it would require chasing multiple pointers each time the data needs to be accessed.
+This does not only increase the space requirements, but may also hurt runtime performance since it would require chasing multiple pointers each time the data needs to be accessed.
 
 One particular technique used to avoid such situation is called \textit{unboxing}\,\autocite{Jones91unboxedvalues,Leroy97theeffectiveness}, which is used to inline references to other datatypes.
 To unbox a datatype, one takes each reference to it and replace it by its individual components.
@@ -2104,7 +2105,7 @@ since these are dependent on the \ttvar{label} and \ttvar{tag} variables which a
 
 In order to be able to use the specialised datatype in \ttdec{gshow}, new branches has to be created which mirrors the branching done using ``the trick'' on the specialised datatypes.
 Figure~\ref{fig:genericshow2} shows the specialisation of \ttdec{gshow} from Figure~\ref{fig:genericshow1}, where new branches has been created by enumerating possible values of \ttvar{tag} (\ttconstructor{TZ} and \ttconstructor{TS TZ}), similarly to when specialising \tttype{Data\_\_Vec\_Int}.
-In the figure, two minor non-essential adjustments have been done. 
+In the figure, two minor non-essential adjustments have been made.
 The first is that it is assumed that \ttdec{gshow} has been updated such that erasable arguments are not pretty printed, and thus neither is the argument \ttvar{n}.
 The other adjustment is that after specialising the expression to print the arguments, it gets the form \ttdec{show}~\texttt{@\{}\ttliteral{\%instance}\texttt{\}}~\ttvar{x}, which has been reduced to simply \ttdec{show}~\ttvar{x} since they are equivalent.
 
@@ -2116,7 +2117,7 @@ The other adjustment is that after specialising the expression to print the argu
 \label{fig:genericshow2}
 \end{figure}
 
-Since the function argument now has right shape, it is now possible to replace the generic datatype argument with the specialised one.
+Since the function argument now has the right shape, it is possible to replace the generic datatype argument with the specialised one.
 Figure~\ref{fig:genericshow3} shows an updated version of Figure~\ref{fig:genericshow2}, where the different branches now uses the specialised constructors \ttconstructor{Con\_Nil} and \ttconstructor{Con\_Cons} and the concatenation expression has been slightly simplified.
 Finally, it can be observed that the finished result looks very similar to how a manually-written \tttype{Show} instance for \tttype{Vec}~\tttype{Int} would have looked like, and therefore a similar performance characteristic is expected.
 
@@ -2142,16 +2143,16 @@ The main subject of the dissertation was to investigate relevant ways to generic
 The theoretical part of the dissertation presented 5 different frameworks to model datatypes generically both in Agda and in Haskell---ranging from supporting simple datatypes to datatypes with indices and nested parameters---and provided a way to map between these models.
 In contrast, I have chosen to rely on existing frameworks performing only some slight modifications, and instead focusing on providing a well-written tutorial to understand those.
 As a part of the analysis, \citeauthor{magalhaes2012less} chose to look at the frameworks from the point of functoriality, and showed how it was possible to implement \tttype{Functor} in each of those models.
-In my work, I had also provided a way to implement \tttype{Functor} on a description that supported nested datatypes, and which was correctly parametric by construction.
+In my work, I also provided a way to implement \tttype{Functor} on a description that supported nested datatypes, and which was correctly parametric by construction.
 In addition, I had provided an analysis on what types of parameters there are in an environment with dependent types.
 
 Similarly to the work presented in this project, \citeauthor{magalhaes2012less} had presented a way to get the generic version of a datatype from ordinary declarations.
 That part however focused mainly on converting ordinary Haskell datatypes to the encoding presented in the framework, while this project focused on converting possibly dependent Idris datatypes to descriptions.
-Since Haskell doesn't have dependent types, the encoding presented requires multiple datatypes to be combined and as such is different from the presented description datatype.
+Since Haskell does not have dependent types, the encoding presented requires multiple datatypes to be combined and as such is different from the presented description datatype.
 
 The work by \citeauthor{magalhaes2012less} also includes a wide variety of generic implementation of useful algorithms using Haskells type class mechanism, including the generic version of \tttype{Show}.
 The generic show in this project is similar, however it uses an ordinary function on the description (requiring only type class instances for the datatype parts).
-An implementation of generic decidable equality was presented on an Agda model of generic datatypes by \citeauthor{magalhaes2012less}, however the presented algorithm was showed semi-decidable equality.
+An implementation of generic decidable equality was presented on an Agda model of generic datatypes by \citeauthor{magalhaes2012less}, however it only semi-decidable equality.
 That is, it used a \tttype{Maybe}-like type, only providing a proof if they were equal and otherwise providing a \ttconstructor{Nothing} value.
 In this project, I have provided a more powerful generic implementation of decidable equality where either a proof was provided or a contra-proof was provided.
 This requires handling a quadratic number of cases instead of linear, in addition to needing to set up various lemmas, since datatypes can be non-equal in various ways.
@@ -2160,11 +2161,12 @@ Finally, I had also presented a couple of purely generic algorithms which are no
 Regarding optimisation, \citeauthor{magalhaes2012less} had designed, implemented and evaluated an algorithm for optimising generic operations used for deriving type classes for Haskell datatypes.
 The algorithm requires an isomorphism between a datatype declaration and its equivalent generic representation, and uses techniques dependent on the isomorphism such as inlining, free theorem substitution and advanced case elimination to achieve excellent performance metrics.
 The work presented in this report focuses on using another optimisation technique, namely partial evaluation and specifically constructor specialisation to optimise described types.
-While there was only the design of an algorithm was presented in this report, the presented algorithm has a few advantages when working with more complex described types than the ones presented by \citeauthor{magalhaes2012less}.
+While only the design of an algorithm was presented in this report, the algorithm has a few advantages when working with more complex described types than the ones presented by \citeauthor{magalhaes2012less}.
 One advantage is that the algorithm is not dependent on whether the described type was generated from a datatype declaration, or was manually created by the programmer, since the algorithm does not require an isomorphism to an ordinary datatype to exist.
 Furthermore, the algorithm can specialise any kind of datatype with static parameters and is not limited to a particular encoding.
 Another advantage is that the algorithm would also work with described types which are based on transformed descriptions, such as based on the free monad description transformation presented in \textcite{Chapman:2010:GAL:1863543.1863547} or the ornamenting structures presented in \textcite{mcbride2010ornamental} and \textcite{dagand2012transporting}.
 Since the transformation of descriptions is often done using calculations on existing datatypes, it can be cumbersome to require the programmer to provide declarations for each possible instantiation in order to get good performance metrics.
+Therefore, the algorithm presented in this paper avoids such requirements, in contrast to the algorithm provided by \citeauthor{magalhaes2012less}.
 
 \subsection{Everywhere in dependent types}
 \label{sub:Everywhere in dependent types}
@@ -2270,12 +2272,12 @@ Unfortunately, most of the existing literature on descriptions is purely theoret
 Unlike its Haskell counterparts, there exist few to no optimisation techniques aiming at improving the performance of generic programs in dependently typed programming.
 
 This was the rationale for one of the important aims of this project, to investigate how it was possible to optimise algorithms that use described types.
-Chapter~\ref{cha:OptimizingIdrisforFlight} presented an analysis on what overhead was added by encoding datatypes using descriptions, and used that analysis to present two optimisation techniques.
+Chapter~\ref{cha:OptimizingIdrisforFlight} presented an analysis that described what overhead was added by encoding datatypes using descriptions, and used that analysis to present two optimisation techniques.
 The first technique added support for erasable arguments in the description, and the other technique presented was the design of an algorithm to specialise datatypes.
-The manual application of these algorithm in the case of described \tttype{Vec}~\ttvar{a}~\ttvar{n}, showed it was possible to achieve a result that was very close to using hand-written algorithms on ordinary datatypes.
+The manual application of these algorithm in the case of the described version of \tttype{Vec}~\ttvar{a}~\ttvar{n}, showed it was possible to achieve a result that was very close to using hand-written algorithms on ordinary datatypes.
 
 Since only the design has been sketched out for the presented algorithm, there are still tasks that are left out as future work.
-One of these tasks would be do provide an implementation of the designed specialisation algorithm, and then benchmark the resulting code to compare the performance and code size of optimised generic programs to hand-written ones.
+One of these tasks would be to provide an implementation of the designed specialisation algorithm, and then benchmark the resulting code to compare the performance and code size of optimised generic programs to hand-written ones.
 Another task would be to investigate what types of binding-time analyses are effective and if there are any heurestics that could be used to further improve performance.
 For example, a static finitely enumerable parameter should probably not be split if there is no dependent calculation.
 Finally, it could be interesting to investigate how such algorithm could be extended to support polymorphic specialisation, since polymorphism in dependent type system is usually a more loose term than in regular type system.
@@ -2306,8 +2308,8 @@ While there were still minor usability challenges to overcome, I believe that th
 
 For the second goal, I had provided a fully-fledged generic implementation of three commonly used algorithms: pretty printing, decidable equality and functorial map.
 Additionally, I had abstracted commonly used patterns using purely generic algorithms and showed how it is possible to combine generic programs with practical features such as tactics in Idris.
-In the end, I also presented a detailed analysis along with informal justification of why it would be hard to implement a SYB-style library in a dependent typed programming language.
-I believe that these contributions, had shed some more light on the possibilities and limitations of the generic programming approach, and shows that it may require some considerations for future library implementers and language designers.
+In the end, I also presented a detailed analysis along with informal justification of why it would be hard to implement a SYB-style library in a dependently typed programming language.
+I believe that these contributions had shed some more light on the possibilities and limitations of the generic programming approach, and shown that it may require some considerations for future library implementers and language designers.
 
 For the final goal, I had analysed the overhead contributed by the generic encoding of datatypes and presented two techniques to eliminate that overhead.
 The first technique was an extension to the described types framework with an annotation to support erasure of arguments.
