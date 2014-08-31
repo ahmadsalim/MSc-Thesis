@@ -59,12 +59,41 @@
 \thetitlepage
 \newpage
 
-\chapter*{Abstract}
+\begin{abstract}
+
+The main goal of this paper was to provide a practical implementation of described types in Idris.
+This included modelling a suitable generics framework inspired by the latest literature, providing practical examples that implemented commonly used algorithms such as pretty printing and decidable equality,
+analysing what difficulties there are when trying to implement an SYB-style generics library in a dependently typed programming language, and designing a data specialisation algorithm based on partial evaluation techniques.
+
+The work presented had emphasis on making it easier for the ordinary to understand the usually abstract concept of generic programming.
+Therefore, a detailed tutorial on how to build described types with a gentle learning curve was presented, and the practical examples were used to show how it was possible to build suitable generic algorithms.
+Furthermore, a procedure was provided to convert ordinary datatype declarations to described types, which makes it easier for an ordinary programmer to use possible library provided generic programs without much effort.
+Finally, the data specialisation algorithm was designed to require little to no effort to use when consuming a generics library.
+While the algorithm lacked an implementation, and thus it was hard to do precise benchmarking; a manual application of the algorithm to an indexed dependently-typed datatype showed that it was possible to eliminate almost all additional space and runtime overhead caused by the description encoding.
+
+\noindent \textbf{Code.} To access the final implementation of the code please visit 
+\url{https://github.com/ahmadsalim/Idris-dev/tree/feature/levitation}.
+The relevant modules are \texttt{Prelude.Generic} and \texttt{Language.Generic.*} in the \texttt{prelude} and \texttt{base} libraries respectively.
 
 \smallskip
 \noindent \textbf{Keywords.} Descriptions. Described types. Generic programming. Levitation. Dependent types. Idris. Partial Evaluation. Constructor Specialisation.
+\end{abstract}
 
 \chapter*{Acknowledgements}
+Writing a Master's thesis, is a long stressful job and without the necessary help it would have been hard to finish it.
+I want to start by thanking my supervisors Dr. Peter Sestoft and David R. Christiansen for their guidance throughout the project.
+They always had planned time to meet even though they had busy schedules, they always provided detailed feedback on my drafts, and they provided support via mail whenever I had questions.
+
+A lot of my ideas presented in this thesis, could not have come to life without some interesting discussions I had.
+I want to thank Daniel Gustafsson and Dr. Nicolas Pouillard for helping me understand some of the basic ideas of parameters and parametricity, which made me able to provide the classifications I did that are presented in this report.
+I also want to thank Larry Diehl for interesting discussions we had on his work on described types, which some concepts in this report were inspired by.
+Additionally, I want to thank Dr. Edwin Brady and the nice people at the \texttt{\#idris} IRC channel on Freenode, which helped me when I had issues with understanding some of the compiler structure and provided fixes when some bugs were found.
+Finally, I want to thank the proof readers of this report, Peter Ali Nicolaisen and Nicolai Skovvart which provided helpful feedback on the structure, grammar and content of this report.
+
+Of course without social support, working alone for 6 months would be a very lonely job.
+Therefore, I want to end these acknowledgements by thanking my family for being understanding and helpful during this stressful period of time.
+
+
 
 \cleardoublepage
 \setcounter{tocdepth}{1}
@@ -147,7 +176,7 @@ The main contributions of this thesis are:
     \item a procedure that generates descriptions from ordinary datatype declarations;
   \item an generic implementation of common operations such as decidable equality, pretty printing and functors, which can be used to provide default implementations to type class methods;
   \item a discussion of the challenges that arise when trying to implement a SYB-style generics library in dependently typed languages;
-  \item design of an algorithm using optimisation techniques based on partial evaluation for reducing runtime size and time overhead for described types and accompanying generic functions.
+  \item design of an algorithm using optimisation techniques based on partial evaluation for reducing the runtime size and time overhead for described types and accompanying generic functions.
 \end{itemize}
 \section{Overview}
 \label{sec:Overview}
