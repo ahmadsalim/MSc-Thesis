@@ -19,6 +19,16 @@
 
 \lstset{basicstyle=\ttfamily}
 
+\hypersetup{%
+colorlinks=false,
+hyperindex=true,
+pdftitle={The Practical Guide to Levitation},
+pdfauthor={Ahmad Salim Al-Sibahi},
+pdfkeywords={Descriptions, Described types, Generic programming, Levitation, Dependent types, Idris, Partial Evaluation, Constructor Specialisation},
+bookmarksopen=true,
+bookmarksnumbered=true
+}
+
 \definecolor{constructor-color}{RGB}{155,187,89}
 \definecolor{type-color}{RGB}{142,180,227}
 \definecolor{declared-var-color}{RGB}{192,80,77}
@@ -48,11 +58,12 @@
 \settitle{The Practical Guide to Levitation}
 \setauthor{Ahmad Salim Al-Sibahi}
 \setsupervisor{Dr. Peter Sestoft}
+\setdoctype{M.Sc. Thesis}
 \setextrasupervisor{David R. Christiansen}
 \setdate{September 1, 2014}
 
 \begin{document}
-%\selectlanguage{danish}
+%\selectlangu}ge{danish}
 
 \frontmatter
 
@@ -65,11 +76,11 @@ The main goal of this paper was to provide a practical implementation of describ
 This included modelling a suitable generics framework inspired by the latest literature, providing practical examples that implemented commonly used algorithms such as pretty printing and decidable equality,
 analysing what difficulties there are when trying to implement an SYB-style generics library in a dependently typed programming language, and designing a data specialisation algorithm based on partial evaluation techniques.
 
-The work presented had emphasis on making it easier for the ordinary to understand the usually abstract concept of generic programming.
-Therefore, a detailed tutorial on how to build described types with a gentle learning curve was presented, and the practical examples were used to show how it was possible to build suitable generic algorithms.
-Furthermore, a procedure was provided to convert ordinary datatype declarations to described types, which makes it easier for an ordinary programmer to use possible library provided generic programs without much effort.
+The work presented had emphasis on making it easier for the ordinary programmer to understand the usually abstract concept of generic programming.
+Therefore, a detailed tutorial with a gentle learning curve on how to use described types was presented, and the practical examples were used to show how it was possible for the programmer to make suitable generic algorithms.
+Furthermore, a procedure was provided to convert ordinary datatype declarations to described types, which would make it easier for an ordinary programmer to use possible library-provided generic programs without much effort.
 Finally, the data specialisation algorithm was designed to require little to no effort to use when consuming a generics library.
-While the algorithm lacked an implementation, and thus it was hard to do precise benchmarking; a manual application of the algorithm to an indexed dependently-typed datatype showed that it was possible to eliminate almost all additional space and runtime overhead caused by the description encoding.
+While the algorithm lacked an implementation, and thus made it hard to do precise benchmarking; a manual application of the algorithm to an indexed dependently-typed datatype showed that it was possible to eliminate almost all additional space and runtime overhead caused by the description encoding.
 
 \noindent \textbf{Code.} To access the final implementation of the code please visit 
 \url{https://github.com/ahmadsalim/Idris-dev/tree/feature/levitation}.
@@ -79,16 +90,16 @@ The relevant modules are \texttt{Prelude.Generic} and \texttt{Language.Generic.*
 \noindent \textbf{Keywords.} Descriptions. Described types. Generic programming. Levitation. Dependent types. Idris. Partial Evaluation. Constructor Specialisation.
 \end{abstract}
 
-\chapter*{Acknowledgements}
-Writing a Master's thesis, is a long stressful job and without the necessary help it would have been hard to finish it.
+\chapter*{Acknowledgements}\addcontentsline{toc}{chapter}{Acknowledgments}
+Writing a Master's thesis is a long stressful job, and without the necessary help it would have been hard to finish it.
 I want to start by thanking my supervisors Dr. Peter Sestoft and David R. Christiansen for their guidance throughout the project.
-They always had planned time to meet even though they had busy schedules, they always provided detailed feedback on my drafts, and they provided support via mail whenever I had questions.
+They always had time to meet even though they had busy schedules, they always provided detailed feedback on my drafts, and they provided support via mail whenever I had questions.
 
-A lot of my ideas presented in this thesis, could not have come to life without some interesting discussions I had.
-I want to thank Daniel Gustafsson and Dr. Nicolas Pouillard for helping me understand some of the basic ideas of parameters and parametricity, which made me able to provide the classifications I did that are presented in this report.
+A lot of my ideas presented in this thesis, could not have come to life without some of the more interesting discussions I had.
+I want to thank Daniel Gustafsson and Dr. Nicolas Pouillard for helping me understand some of the basic ideas of parameters and parametricity, which made me able to provide the classifications I presented in this report.
 I also want to thank Larry Diehl for interesting discussions we had on his work on described types, which some concepts in this report were inspired by.
 Additionally, I want to thank Dr. Edwin Brady and the nice people at the \texttt{\#idris} IRC channel on Freenode, which helped me when I had issues with understanding some of the compiler structure and provided fixes when some bugs were found.
-Finally, I want to thank the proof readers of this report, Peter Ali Nicolaisen and Nicolai Skovvart which provided helpful feedback on the structure, grammar and content of this report.
+Finally, I want to thank the proof readers of this report, Peter Ali Nicolaisen and Nicolai Skovvart which provided helpful feedback on the structure, grammar and content.
 
 Of course without social support, working alone for 6 months would be a very lonely job.
 Therefore, I want to end these acknowledgements by thanking my family for being understanding and helpful during this stressful period of time.
@@ -98,6 +109,8 @@ Therefore, I want to end these acknowledgements by thanking my family for being 
 \cleardoublepage
 \setcounter{tocdepth}{1}
 \tableofcontents
+\newpage
+\listoffigures
 
 \mainmatter
 \midsloppy
@@ -106,10 +119,10 @@ Therefore, I want to end these acknowledgements by thanking my family for being 
 \label{cha:Intoduction}
 \section{Context}
 \label{sec:Context}
-Algebraic datatypes such as Boolean values, lists or trees form a core part of modern functional programming.
+Algebraic datatypes such as Boolean values, lists and trees form a core part of modern functional programming.
 Most functions written work directly on such datatypes, but some functions like structural equality or pretty printing (see Example~\ref{exmp:prettyprint}) do not directly dependent on the datatype itself.
 Therefore, writing such functions for each different datatype becomes a repetitive exercise.
-In fact it is possible to write an algorithm over the structural definition of the datatype, which the computer then could use to derive an actual function for each particular datatypes.
+In fact it is possible to write an algorithm over the structural definition of the datatype, which the computer then could use to derive an actual function for each particular datatype.
 
 \begin{exmp}
   Pretty printing an element of any algebraic data type follows a very simple procedure:
@@ -147,7 +160,7 @@ The current work on generic programming in dependently-typed languages presents 
 Furthermore, it allows the programmer to save both time and boilerplate code while reducing mistakes by using ordinary programming techniques to do generic programming.
 
 However, the state of the art is heavily theoretically oriented, which might lead to some challenges when a system needs to be developed with a practical audience in mind.
-First of all, multiple description formats are often presented, sometimes even in the same paper, which might not be particularly attractive in a practical setting.
+First of all, multiple incompatible description formats are often presented, sometimes even in the same paper, which might not be particularly attractive in a practical setting.
 Secondly, there has been little work done on how to integrate such descriptions in languages which contain features such as type classes and proof scripts.
 Finally, datatypes synthesised from descriptions create large canonical terms; thus, both type checking and runtime performance are very slow.
 In the end, if an efficient and easily usable framework for programming with described types could be implemented successfully, it would save programmers both the time and effort required to write repetitive functions.
@@ -161,9 +174,9 @@ The first goal is to find a good definition of the description that supports man
 I mainly seek to reuse some of the existing work, and not to further develop underlying type theory to support more complex inductive families; neither will I focus on supporting all language features of Idris such as implicit arguments and codata definitions\,\autocite{idris2014tutorial}.
 
 The second goal is to present realistic examples using generic functions working on described types. 
-This mainly includes implementing functions that can be used to derive type class instances, and a Scrap Your Boilerplate-style (SYB) library for generic querying and traversal.
+This mainly includes implementing functions that can be used to derive type class instances, and a Scrap Your Boilerplate-style (SYB) library\,\autocite{lammel2003scrap,mitchell2014uniplate} for generic querying and transformation.
 
-The final goal is to describe how partial evaluation and related techniques can be used to optimise the generic functions with regards to specific descriptions in order to achieve acceptable performance.
+The final goal is to describe how partial evaluation and related techniques can be used to optimise the described types and dependent generic functions in order to achieve acceptable performance.
 This includes using techniques such as polyvariant partial evaluation\,\autocite{Jones:1993:PEA:153676} and constructor specialisation\,\autocite{Mogensen:1993:CS:154630.154633}. %Elaborate when I know more about PE\ldots
 
 \section{Significance}
@@ -172,7 +185,7 @@ The main contributions of this thesis are:
 
 \begin{itemize}
   \item an example-based tutorial for understanding described types in the context of a practical programming language, namely Idris;
-    \item an explanation of the different definitions of parameters found in the literature;
+    \item an explanation and classification of some of the different definitions of parameters found in the literature;
     \item a procedure that generates descriptions from ordinary datatype declarations;
   \item an generic implementation of common operations such as decidable equality, pretty printing and functors, which can be used to provide default implementations to type class methods;
   \item a discussion of the challenges that arise when trying to implement a SYB-style generics library in dependently typed languages;
@@ -184,7 +197,7 @@ The main contributions of this thesis are:
 The report is structured as follows. Chapter~\ref{cha:GenericProgramming} presents an introduction to described types specifically focusing on recent developments using dependently-typed programming languages.
 Chapter~\ref{cha:PartialEvaluation} presents an overview of techniques for partial evaluation of functions and specialisation of datatypes. Chapter~\ref{cha:LevitatingIdris} discusses specifically how I implemented described types in Idris and continues with practical examples in Chapter~\ref{cha:PracticalExamples}.
 Chapter~\ref{cha:OptimizingIdrisforFlight} presents the optimisations that can be made in order to improve the runtime performance of described types and generic functions.
-Finally, Chapter~\ref{cha:Discussion} discusses the challenges that still lie ahead and concludes the effort.
+Finally, Chapter~\ref{cha:Discussion} discusses the challenges that still lie ahead and Chapter~\ref{cha:Conclusion} concludes the effort.
 \chapter{Generic programming}
 \label{cha:GenericProgramming}
 \section{The generic structure of inductive data types}
@@ -305,7 +318,7 @@ The description for each constructor is then specified in a similar fashion to d
     \includegraphics[scale=0.5]{Figures/EitherDescription.png}
 
 }
-\caption{the sum type of \tttype{Int} and \tttype{String}}
+\caption{The sum type of \tttype{Int} and \tttype{String}}
 \end{center}
 \end{figure}
 
@@ -457,7 +470,7 @@ values manually.
 \begin{center}
     \includegraphics[scale=0.5]{Figures/AnInformativeEncodingofConstructorsTags.png}
 \end{center}
-\caption{Tags: A Structure for Picking a Constructor from a Label Collection}
+\caption{Tags: A structure for picking a constructor from a label collection}
 \label{fig:ctortags}
 \end{figure}
 
@@ -516,7 +529,7 @@ As an example, Figure~\ref{fig:vecdescim} shows the description of \tttype{Vec} 
 \begin{center}
     \includegraphics[scale=0.5]{Figures/VectorDescriptionImproved.png}
 \end{center}
-\caption{Description of Vec given a Constructor Tag}
+\caption{Description of \tttype{Vec} given a constructor tag}
 \label{fig:vecdescim}
 \end{figure}
 
@@ -542,7 +555,7 @@ Since the dependent pair is used as the target type for the synthesis, it itself
 \begin{center}
     \includegraphics[scale=0.5]{Figures/SynthesisingData.png}
 \end{center}
-\caption{Synthesising Descriptions into Actual Types}
+\caption{Synthesising descriptions into actual types}
 \label{fig:synthdata}
 \end{figure}
 
@@ -571,7 +584,7 @@ and additionally the expected value of the result index (\textit{i.e.}, \ttvar{n
 \begin{center}
     \includegraphics[scale=0.5]{Figures/VectorSynthesisedDesc.png}
 \end{center}
-\caption{Synthesised Version of Vector Description}
+\caption{Synthesised version of the description for \tttype{Vec}}
 \label{fig:synthversvecdesc}
 \end{figure}
 
@@ -2170,30 +2183,30 @@ During the finishing stages of this project I had discovered a Ph.D. dissertatio
 The main subject of the dissertation was to investigate relevant ways to generically model datatypes in context of Haskell programming, and how to optimise dependent functions to achieve good performance.
 
 The theoretical part of the dissertation presented 5 different frameworks to model datatypes generically both in Agda and in Haskell---ranging from supporting simple datatypes to datatypes with indices and nested parameters---and provided a way to map between these models.
-In contrast, I have chosen to rely on existing frameworks performing only some slight modifications, and instead focusing on providing a well-written tutorial to understand those.
+In contrast, I had chosen to rely on existing frameworks performing only some slight modifications, and instead focusing on providing a well-written tutorial to understand those.
 As a part of the analysis, \citeauthor{magalhaes2012less} chose to look at the frameworks from the point of functoriality, and showed how it was possible to implement \tttype{Functor} in each of those models.
 In my work, I also provided a way to implement \tttype{Functor} on a description that supported nested datatypes, and which was correctly parametric by construction.
-In addition, I had provided an analysis on what types of parameters there are in an environment with dependent types.
+In addition, I had provided an analysis on what different types of definitions there are for parameters in a dependently typed language.
 
 Similarly to the work presented in this project, \citeauthor{magalhaes2012less} had presented a way to get the generic version of a datatype from ordinary declarations.
-That part however focused mainly on converting ordinary Haskell datatypes to the encoding presented in the framework, while this project focused on converting possibly dependent Idris datatypes to descriptions.
+That part however, focused mainly on converting ordinary Haskell datatypes to the encoding presented in the framework, while this project focused on converting possibly dependent Idris datatypes to descriptions.
 Since Haskell does not have dependent types, the encoding presented requires multiple datatypes to be combined and as such is different from the presented description datatype.
 
-The work by \citeauthor{magalhaes2012less} also includes a wide variety of generic implementation of useful algorithms using Haskells type class mechanism, including the generic version of \tttype{Show}.
-The generic show in this project is similar, however it uses an ordinary function on the description (requiring only type class instances for the datatype parts).
-An implementation of generic decidable equality was presented on an Agda model of generic datatypes by \citeauthor{magalhaes2012less}, however it only semi-decidable equality.
+The work by \citeauthor{magalhaes2012less} also includes a wide variety of generic implementations of useful algorithms using Haskells type class mechanism, including the generic version of \tttype{Show}.
+The generic show in this project is similar, however it uses an ordinary function on the description (requiring only type class instances for the parts of the datatype).
+An implementation of generic decidable equality was presented on an Agda model by \citeauthor{magalhaes2012less}, however it only supported semi-decidability.
 That is, it used a \tttype{Maybe}-like type, only providing a proof if they were equal and otherwise providing a \ttconstructor{Nothing} value.
 In this project, I have provided a more powerful generic implementation of decidable equality where either a proof was provided or a contra-proof was provided.
 This requires handling a quadratic number of cases instead of linear, in addition to needing to set up various lemmas, since datatypes can be non-equal in various ways.
-Finally, I had also presented a couple of purely generic algorithms which are not trivial to implement outside a powerful type system with tactic support like Idris.
+Finally, I had presented a couple of purely generic algorithms which are not trivial to implement outside a powerful type system with tactic support like Idris.
 
 Regarding optimisation, \citeauthor{magalhaes2012less} had designed, implemented and evaluated an algorithm for optimising generic operations used for deriving type classes for Haskell datatypes.
 The algorithm requires an isomorphism between a datatype declaration and its equivalent generic representation, and uses techniques dependent on the isomorphism such as inlining, free theorem substitution and advanced case elimination to achieve excellent performance metrics.
 The work presented in this report focuses on using another optimisation technique, namely partial evaluation and specifically constructor specialisation to optimise described types.
-While only the design of an algorithm was presented in this report, the algorithm has a few advantages when working with more complex described types than the ones presented by \citeauthor{magalhaes2012less}.
+While only the design of an algorithm was presented in this report, the algorithm had a few advantages when working with more complex described types than the ones presented by \citeauthor{magalhaes2012less}.
 One advantage is that the algorithm is not dependent on whether the described type was generated from a datatype declaration, or was manually created by the programmer, since the algorithm does not require an isomorphism to an ordinary datatype to exist.
 Furthermore, the algorithm can specialise any kind of datatype with static parameters and is not limited to a particular encoding.
-Another advantage is that the algorithm would also work with described types which are based on transformed descriptions, such as based on the free monad description transformation presented in \textcite{Chapman:2010:GAL:1863543.1863547} or the ornamenting structures presented in \textcite{mcbride2010ornamental} and \textcite{dagand2012transporting}.
+Another advantage is that the algorithm would also work with described types which are based on transformed descriptions, such as the ones based on the free monad description transformation presented in \textcite{Chapman:2010:GAL:1863543.1863547} or the ornamenting structures presented in \textcite{mcbride2010ornamental} and \textcite{dagand2012transporting}.
 Since the transformation of descriptions is often done using calculations on existing datatypes, it can be cumbersome to require the programmer to provide declarations for each possible instantiation in order to get good performance metrics.
 Therefore, the algorithm presented in this paper avoids such requirements, in contrast to the algorithm provided by \citeauthor{magalhaes2012less}.
 
@@ -2202,7 +2215,7 @@ Therefore, the algorithm presented in this paper avoids such requirements, in co
 Section~\ref{sec:Scrappingyourdependently-typedboilerplateishard} discussed the challenges of implementing a SYB-style library in a language with dependent types that could preserve expected invariants of a datatype.
 However, in a closed type system with type casing support, it would be possible to implement a generic traversal function that alters the result type dependent on the provided transformation as demonstrated by \textcite{diehl2013every}.
 While this provides a simple way to perform many powerful transformations, it also comes at a price.
-The function is not implemented to support descriptions, it breaks parametricity, and the output type might not be immediately what is expected.
+The function is not implemented to support general descriptions, it breaks parametricity, and the output type might not be immediately what is expected.
 
 %\section{Proposed Improvements}
 %\label{sec:ProposedImprovements}
@@ -2222,8 +2235,8 @@ The function is not implemented to support descriptions, it breaks parametricity
 \label{sub:Usabilityfromtheperspectiveofordinaryprogrammers}
 Generic programming using described types is a powerful concept, permitting programmers to write complex programs that works for many datatypes in a succinct fashion.
 Naturally, it would be desirable to enable ordinary programmers to use such concepts.
-This is because it reduces the time taken avoiding repetitive implementations of an algorithm for specific datatypes while at the same time reducing the risk of creating new bugs.
-However, the state of the current literature is that it is often written targeting academics using abstract concepts with extensive use of type theory and complex features of dependent types.
+This is because it reduces the time taken, avoiding repetitive implementations of an algorithm for specific datatypes, while at the same time reducing the risk of creating new bugs.
+However, the state of the current literature is that it is often written targeting academics, including abstract concepts with extensive use of type theory and complex features of dependent types.
 For example, it is not uncommon to find many syntactic short cuts introduced in the literature\,\autocite{Chapman:2010:GAL:1863543.1863547,mcbride2010ornamental}.
 While this is something that makes it easier to write complex expressions, it comes at the price of making it harder to immediately understand the underlying concepts for ordinary programmers.
 
@@ -2235,7 +2248,7 @@ Finally, I related the presented encoding back to the literature and provided th
 
 Another aim was to make it easy for programmers to use library-provided generic programs without requiring extensive knowledge on how descriptions worked.
 Therefore, I provided a way to generate descriptions from ordinary datatype declarations as presented in Chapter~\ref{cha:LevitatingIdris}.
-Furhermore, relevant aliases was provided to use these types that were synthesised from the generated descriptions in order to make it possible to use these described types with the same ease as using ordinary datatypes.
+Furhermore, relevant aliases were provided to use these types that were synthesised from the generated descriptions in order to make it possible to use these described types with the same ease as using ordinary datatypes.
 
 Chapter~\ref{cha:PracticalExamples} provided a few realistic functions to present how it was possible to do generic programming using described types.
 These were meant to serve as an inspiration for the ordinary programmer, on how to structure commonly used operations in a generic fashion.
@@ -2278,7 +2291,7 @@ This combination of practical features combined with dependent types, make it si
 
 While it was shown that it was possible to create many interesting generic algorithms, there were still limitations that were not handled in this project.
 Chapter~\ref{cha:PracticalExamples} discussed the challenges that had risen when trying to implement a SYB-style generics library, and therefore it would still be desirable to find an alternative approach to handling generic traversal on datatypes.
-Additionally, while the presented description datatypes in Chapter~\ref{cha:GenericProgramming} and Chapter~\ref{cha:LevitatingIdris} were able to handle many kinds of subject datatypes, they could not handle all of them.
+Additionally, while the presented descriptions in Chapter~\ref{cha:GenericProgramming} and Chapter~\ref{cha:LevitatingIdris} were able to handle many kinds of subject datatypes, they could not handle all of them.
 In order to be able to leverage described types as a way to avoid boilerplate for all kinds of datatypes, additional work would be required to support for complex type families like the inductive-inductive and inductive-recursive ones.
 Finally, future work is required in Idris in order to support higher-order implicit and default arguments in order to be able to mimic datatype definitions exactly by described types.
 
@@ -2298,7 +2311,7 @@ Finally, future work is required in Idris in order to support higher-order impli
 Generic algorithms would not be of great practical use, if they were orders of magnitude slower than their hand-written counterparts.
 Therefore, it is essential that the written generic algorithms get optimised, and the added overhead eliminated.
 Unfortunately, most of the existing literature on descriptions is purely theoretically focused and looks mostly at how it is possible to increase the expression of such frameworks.
-Unlike its Haskell counterparts, there exist few to no optimisation techniques aiming at improving the performance of generic programs in dependently typed programming.
+Unlike its Haskell counterparts, the author was not able to find relevant optimisation techniques aiming at improving the performance of generic programs in dependently typed programming.
 
 This was the rationale for one of the important aims of this project, to investigate how it was possible to optimise algorithms that use described types.
 Chapter~\ref{cha:OptimizingIdrisforFlight} presented an analysis that described what overhead was added by encoding datatypes using descriptions, and used that analysis to present two optimisation techniques.
@@ -2310,7 +2323,7 @@ One of these tasks would be to provide an implementation of the designed special
 Another task would be to investigate what types of binding-time analyses are effective and if there are any heurestics that could be used to further improve performance.
 For example, a static finitely enumerable parameter should probably not be split if there is no dependent calculation.
 Finally, it could be interesting to investigate how such algorithm could be extended to support polymorphic specialisation, since polymorphism in dependent type system is usually a more loose term than in regular type system.
-Without polymorphic specialisation, it is not possible to specialise datatypes with nested parameters among others, since that would require creating an infinite series of datatypes (one for each nesting of parameters), similarly to the case of indices.
+Without polymorphic specialisation, it would not be possible to specialise datatypes with nested parameters among others, since that would require creating an infinite series of datatypes (one for each nesting of parameters), similarly to the case of indices.
 
 
 %\begin{enumerate}
@@ -2347,6 +2360,7 @@ While an actual implementation still needs to be developed, application of the a
 
 \printbibliography
 
+\appendix
 \chapter{Generation function}
 \label{cha:Generation function}
 \lstinputlisting[language=Haskell,breaklines=true,numbers=left,caption={Generating relevant functions for working with described types},label={app:gendesc}]{Code/DescriptionGeneration.hs}

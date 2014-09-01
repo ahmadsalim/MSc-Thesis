@@ -158,6 +158,8 @@
 \newcommand{\settitle}[1]{\def\itutitle{#1}}
 % you
 \newcommand{\setauthor}[1]{\def\ituauthor{#1}}
+% your degree
+\newcommand{\setdoctype}[1]{\def\itudoctype{#1}}
 % your supervisor
 \newcommand{\setsupervisor}[1]{\def\itusupervisor{#1}}
 \newcommand{\setextrasupervisor}[1]{\def\itusupervisorextra{#1}}
@@ -182,6 +184,9 @@
     };
     \node[align=center,font=\sffamily\Large] (author) at (0, 1cm){
       \ituauthor
+    };
+    \node[align=center,font=\sffamily\Large] (doctype) at (0, 0cm){
+      \itudoctype
     };
   \end{tikzpicture}
   \begin{tikzpicture}[remember picture,overlay,line width=0mm,shift=(current page.south west), align=left, font=\sffamily\large]
